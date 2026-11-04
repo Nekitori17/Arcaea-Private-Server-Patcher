@@ -57,8 +57,8 @@ The APK is signed with `debug.keystore` (auto-generated on first run) unless you
 
 ```yaml
 server:
-  api_host: "arc-api.example.com"      # replaces arcapi-v4/v3.lowiro.com
-  auth_host: "auth.example.com:8080"   # replaces auth-v2/auth/arcaea.lowiro.com
+  api_host: "arc-api.example.com:custom_port"      # replaces arcapi-v4/v3.lowiro.com
+  auth_host: "custom_domain:8080"   # replaces auth-v2/auth/arcaea.lowiro.com
   custom_mappings:                     # optional extra rules, one per entry
     "some.other.host": "192.168.1.10"
 
