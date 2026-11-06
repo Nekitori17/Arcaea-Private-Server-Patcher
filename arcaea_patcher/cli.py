@@ -4,8 +4,8 @@ import sys
 
 from arcaea_patcher import __version__
 from arcaea_patcher.config import PatchConfig
-from arcaea_patcher.core.apk_toolchain import ApkToolchain, ToolchainError
-from arcaea_patcher.core.patch_pipeline import PatchPipeline
+from arcaea_patcher.core.engine import PatchEngine
+from arcaea_patcher.core.toolchain import ApkToolchain, ToolchainError
 from arcaea_patcher.utils.logger import logger
 
 
@@ -48,6 +48,12 @@ def parse_args(argv=None) -> argparse.Namespace:
         help="Custom package name for the patched APK",
     )
     parser.add_argument(
+        "--app-name",
+        type=str,
+        default=None,
+        help="Custom display name (label) for the patched APK",
+    )
+    parser.add_argument(
         "-v",
         "--version",
         action="version",
@@ -66,13 +72,14 @@ def run_app() -> None:
         api_host=args.api_host,
         auth_host=args.auth_host,
         package_name=args.package_name,
+        app_name=args.app_name,
     )
 
     toolchain = ApkToolchain()
-    pipeline = PatchPipeline(config, toolchain)
+    engine = PatchEngine(config, toolchain)
 
     try:
-        pipeline.execute()
+        engine.execute()
     except ToolchainError as e:
         logger.error(f"Toolchain failure: {e}")
         sys.exit(1)

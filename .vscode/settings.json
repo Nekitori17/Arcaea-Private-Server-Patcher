@@ -1,0 +1,7 @@
+{
+  "clangd.arguments": [
+    "--compile-commands-dir=${workspaceFolder}/native/build/arm64-v8a",
+    "--header-insertion=never"
+  ],
+  "cmake.sourceDirectory": "${workspaceFolder}/native",
+}
