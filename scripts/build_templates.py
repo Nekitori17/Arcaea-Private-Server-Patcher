@@ -125,6 +125,8 @@ def find_ndk(sdk: Path) -> Path:
         if toolchain.is_file():
             info(f"Android NDK : {root}")
             return root
+    
+    return Path("")
 
 
 
@@ -219,11 +221,6 @@ def find_baksmali_classpath(sdk: Path) -> list[str]:
         die("baksmali CLI not found in SDK cmdline-tools or lib/.")
 
     return classpath
-
-    die("Android NDK with CMake toolchain not found. Install NDK via SDK Manager.")
-    return Path("")
-
-
 
 
 def build_native(cmake: Path, ninja: Path, ndk: Path) -> None:
