@@ -4,8 +4,8 @@ import sys
 
 from arcaea_patcher import __version__
 from arcaea_patcher.config import PatchConfig
-from arcaea_patcher.core.apk_toolchain import ApkToolchain, ToolchainError
-from arcaea_patcher.core.patch_pipeline import PatchPipeline
+from arcaea_patcher.core.engine import PatchEngine
+from arcaea_patcher.core.toolchain import ApkToolchain, ToolchainError
 from arcaea_patcher.utils.logger import logger
 
 
@@ -69,10 +69,10 @@ def run_app() -> None:
     )
 
     toolchain = ApkToolchain()
-    pipeline = PatchPipeline(config, toolchain)
+    engine = PatchEngine(config, toolchain)
 
     try:
-        pipeline.execute()
+        engine.execute()
     except ToolchainError as e:
         logger.error(f"Toolchain failure: {e}")
         sys.exit(1)
