@@ -40,6 +40,7 @@ class PatchConfig:
     input_apk: Path
     output_apk: Path
     package_name: Optional[str] = None
+    app_name: Optional[str] = None
     feature_config: FeaturesConfig = field(default_factory=FeaturesConfig)
     server: ServerRoutingConfig = field(default_factory=ServerRoutingConfig)
     signing: SigningConfig = field(default_factory=SigningConfig)
@@ -56,6 +57,7 @@ class PatchConfig:
         api_host: Optional[str] = None,
         auth_host: Optional[str] = None,
         package_name: Optional[str] = None,
+        app_name: Optional[str] = None,
     ) -> "PatchConfig":
         cfg = cls(input_apk=input_apk, output_apk=output_apk)
 
@@ -78,6 +80,7 @@ class PatchConfig:
             cfg.server.custom_mappings = server_data.get("custom_mappings") or {}
 
             cfg.package_name = raw.get("package_name")
+            cfg.app_name = raw.get("app_name")
 
             features_data = raw.get("features") or {}
             cfg.feature_config.expose_internal_data = bool(features_data.get("expose_internal_data", False))
@@ -98,6 +101,8 @@ class PatchConfig:
             cfg.server.auth_host = auth_host
         if package_name:
             cfg.package_name = package_name
+        if app_name:
+            cfg.app_name = app_name
 
         if cfg.server.has_routing:
             logger.info(

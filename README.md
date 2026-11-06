@@ -48,7 +48,8 @@ CLI flags override `config.yml`. `config.yml` / `config.yaml` in the project roo
 python -m arcaea_patcher input.apk -o patched.apk \
   --api-host arc-api.example.com \
   --auth-host auth.example.com \
-  --package-name moe.ext.arc
+  --package-name moe.ext.arc \
+  --app-name "Arcaea Ext"
 ```
 
 The APK is signed with `debug.keystore` (auto-generated on first run) unless you change the `signing:` section. The original signature will not be preserved — uninstall the original app if the package name is unchanged.
@@ -63,6 +64,7 @@ server:
     "some.other.host": "192.168.1.10"
 
 package_name: "moe.ext.arc"           # omit to keep the original package
+app_name: "Arcaea Ext"                # omit to keep the original display name
 
 features:
   expose_internal_data: false          # SAF provider for internal storage access

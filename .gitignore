@@ -373,6 +373,7 @@ config.yml
 
 !arcaea_patcher/templates/**/*
 !arcaea_patcher/manifest/**/*
+arcaea_patcher/manifest/**/__pycache__/**/*
 native/build/
 dump_tmp
 .ida

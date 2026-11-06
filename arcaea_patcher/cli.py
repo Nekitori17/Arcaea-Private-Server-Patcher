@@ -48,6 +48,12 @@ def parse_args(argv=None) -> argparse.Namespace:
         help="Custom package name for the patched APK",
     )
     parser.add_argument(
+        "--app-name",
+        type=str,
+        default=None,
+        help="Custom display name (label) for the patched APK",
+    )
+    parser.add_argument(
         "-v",
         "--version",
         action="version",
@@ -66,6 +72,7 @@ def run_app() -> None:
         api_host=args.api_host,
         auth_host=args.auth_host,
         package_name=args.package_name,
+        app_name=args.app_name,
     )
 
     toolchain = ApkToolchain()

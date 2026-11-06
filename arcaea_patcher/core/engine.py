@@ -16,6 +16,7 @@ from arcaea_patcher.manifest import (
     inject_network_security_config,
     inject_saf_documents_provider,
     rename_apk_package,
+    rename_app_label,
 )
 from arcaea_patcher.resources import (
     build_domain_rules,
@@ -71,14 +72,23 @@ class PatchEngine:
                 logger.warn("No template files found (run scripts/build_templates.py).")
                 self.report.add("templates", "merge-artifacts", "decoded/", False, "missing templates", optional=True)
 
-            if ctx.config.package_name:
-                logger.header("[3/9] Renaming APK Package")
-                ok, detail = rename_apk_package(ctx.decoded_dir, ctx.config.package_name)
-                if ok:
-                    logger.success(f"Package rename: {detail}")
-                else:
-                    logger.warn(f"Package rename failed: {detail}")
-                self.report.add("manifest", "rename-package", "AndroidManifest.xml", ok, detail)
+            if ctx.config.package_name or ctx.config.app_name:
+                logger.header("[3/9] Updating Package & App Identity")
+                if ctx.config.package_name:
+                    ok, detail = rename_apk_package(ctx.decoded_dir, ctx.config.package_name)
+                    if ok:
+                        logger.success(f"Package rename: {detail}")
+                    else:
+                        logger.warn(f"Package rename failed: {detail}")
+                    self.report.add("manifest", "rename-package", "AndroidManifest.xml", ok, detail)
+
+                if ctx.config.app_name:
+                    ok, detail = rename_app_label(ctx.decoded_dir, ctx.config.app_name)
+                    if ok:
+                        logger.success(f"App name: {detail}")
+                    else:
+                        logger.warn(f"App name update failed: {detail}")
+                    self.report.add("manifest", "rename-app-label", "AndroidManifest.xml", ok, detail)
 
             if ctx.config.inject_nsc:
                 logger.header("[4/9] Injecting Network Security Config")
