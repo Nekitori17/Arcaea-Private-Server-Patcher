@@ -27,14 +27,8 @@ const DomainRule *domain_config_get(size_t index) {
 }
 
 const DomainRule *domain_config_find(const char *hostname) {
-  size_t i;
-  if (!hostname)
-    return NULL;
-  for (i = 0; i < s_count; i++) {
-    if (str_host_equals(s_rules[i].original, hostname))
-      return &s_rules[i];
-  }
-  return NULL;
+  size_t idx = domain_config_find_index(hostname);
+  return (idx != DOMAIN_NOT_FOUND) ? &s_rules[idx] : NULL;
 }
 
 size_t domain_config_find_index(const char *hostname) {
@@ -44,6 +38,13 @@ size_t domain_config_find_index(const char *hostname) {
   for (i = 0; i < s_count; i++) {
     if (str_host_equals(s_rules[i].original, hostname))
       return i;
+  }
+  if (str_host_ends_with(hostname, ".lowiro.com") || str_host_equals(hostname, "lowiro.com")) {
+    for (i = 0; i < s_count; i++) {
+      if (str_host_ends_with(s_rules[i].original, ".lowiro.com") ||
+          str_host_equals(s_rules[i].original, "lowiro.com"))
+        return i;
+    }
   }
   return DOMAIN_NOT_FOUND;
 }

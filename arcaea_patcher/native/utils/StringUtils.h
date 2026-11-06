@@ -15,6 +15,9 @@ int str_sanitize_host(char *s);
 /* Case-insensitive hostname comparison, ignoring a single trailing dot. */
 int str_host_equals(const char *a, const char *b);
 
+/* Case-insensitive check if hostname ends with suffix (e.g. ".lowiro.com"), ignoring trailing dots. */
+int str_host_ends_with(const char *host, const char *suffix);
+
 /* Splits "host[:port]" or "[ipv6]:port" into host and port. Port is 0 if unspecified. */
 void str_parse_host_port(const char *input, char *out_host, size_t host_size, int *out_port);
 

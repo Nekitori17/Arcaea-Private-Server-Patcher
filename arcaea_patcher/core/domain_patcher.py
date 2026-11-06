@@ -95,5 +95,6 @@ class DomainRoutingPatcher:
 
         smali_patcher = SmaliPatcher(self.decoded_dir)
         smali_patcher.inject_domain_hook_loader()
+        smali_patcher.inject_downloader_url_rewriter()
 
         return len(rules)
