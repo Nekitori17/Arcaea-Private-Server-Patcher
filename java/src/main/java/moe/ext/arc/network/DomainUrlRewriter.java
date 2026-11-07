@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import moe.ext.arc.config.DomainConfigLoader;
-import moe.ext.arc.config.DomainRule;
+import moe.ext.arc.config.DomainConfigLoader.DomainRule;
 import moe.ext.arc.config.DomainRuleMatcher;
 
 /**

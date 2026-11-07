@@ -1,4 +1,4 @@
-"""Base abstractions and helpers for Smali bytecode transformations."""
+"""Base abstractions and bytecode rewriting helpers for Smali transformations."""
 
 from __future__ import annotations
 
@@ -94,3 +94,4 @@ def inject_param_static_filter(
     content = content.replace(match.group(0), f"{header}{new_body}{footer}", 1)
     path.write_text(content, encoding="utf-8")
     return True
+

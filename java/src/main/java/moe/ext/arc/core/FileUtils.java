@@ -1,17 +1,14 @@
 package moe.ext.arc.core;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import moe.ext.arc.ExtEntry;
 
 /**
- * Resolves package identity and internal storage file paths.
+ * Generic file and path resolution utilities.
  */
-public final class AppEnvironment {
+public final class FileUtils {
     public static final String DOMAIN_CONFIG_NAME = "domain.cfg";
 
     private static final String[] FALLBACK_PACKAGES = new String[] {
@@ -19,27 +16,12 @@ public final class AppEnvironment {
         "moe.low.arc"
     };
 
-    private AppEnvironment() {
+    private FileUtils() {
     }
 
-    public static String getCurrentPackageName() {
-        try (FileInputStream in = new FileInputStream("/proc/self/cmdline");
-             InputStreamReader isr = new InputStreamReader(in, StandardCharsets.UTF_8);
-             BufferedReader reader = new BufferedReader(isr)) {
-            StringBuilder sb = new StringBuilder();
-            int ch;
-            while ((ch = reader.read()) > 0) {
-                sb.append((char) ch);
-            }
-            return sb.toString().trim();
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    public static File resolveConfigFile(String filename) {
+    public static File resolveFilePath(String filename) {
         List<String> candidates = new ArrayList<String>();
-        String selfPkg = getCurrentPackageName();
+        String selfPkg = ExtEntry.getCurrentPackageName();
         if (selfPkg != null && !selfPkg.isEmpty()) {
             candidates.add(selfPkg);
         }
@@ -64,3 +46,4 @@ public final class AppEnvironment {
         return null;
     }
 }
+

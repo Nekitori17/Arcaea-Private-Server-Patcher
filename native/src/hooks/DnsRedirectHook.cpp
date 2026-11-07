@@ -5,7 +5,6 @@
 #include <sys/socket.h>
 
 #include "DnsRouteCache.h"
-#include "DomainMatcher.h"
 #include "DomainRuleTable.h"
 #include "HostentBuilder.h"
 

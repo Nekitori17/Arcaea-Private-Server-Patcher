@@ -2,9 +2,9 @@
 
 #include <pthread.h>
 
-#include "AppPaths.h"
 #include "DnsRedirectHook.h"
 #include "DomainRuleTable.h"
+#include "FileUtils.h"
 #include "HookManager.h"
 #include "SocketConnectHook.h"
 #include "SslTrafficLoggerHook.h"
@@ -28,9 +28,9 @@ void perform_init() {
   LOGI("      Initializing ArcExt Native        ");
   LOGI("========================================");
 
-  char cfg_path[Ext::Config::kMaxConfigPath] = {0};
-  bool exists = Ext::Config::resolve_config_path(kConfigFilename, cfg_path,
-                                                 sizeof(cfg_path));
+  char cfg_path[Ext::Utils::kMaxPathLength] = {0};
+  bool exists = Ext::Utils::resolve_app_file_path(kConfigFilename, cfg_path,
+                                                  sizeof(cfg_path));
   LOGI("Domain config path: %s (exists=%d)", cfg_path, exists ? 1 : 0);
 
   auto &rule_table = Ext::Config::DomainRuleTable::instance();

@@ -11,7 +11,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import moe.ext.arc.core.AppEnvironment;
+import moe.ext.arc.core.FileUtils;
 import moe.ext.arc.network.UrlAuthorityParser;
 
 /**
@@ -19,6 +19,23 @@ import moe.ext.arc.network.UrlAuthorityParser;
  */
 public final class DomainConfigLoader {
     private static final String TAG = "ArcExt::Config";
+
+    /**
+     * Immutable representation of a single domain routing rule.
+     */
+    public static final class DomainRule {
+        public final String originalHost;
+        public final int originalPort;
+        public final String replacementHost;
+        public final int replacementPort;
+
+        public DomainRule(String originalHost, int originalPort, String replacementHost, int replacementPort) {
+            this.originalHost = originalHost;
+            this.originalPort = originalPort;
+            this.replacementHost = replacementHost;
+            this.replacementPort = replacementPort;
+        }
+    }
 
     private DomainConfigLoader() {
     }
@@ -28,7 +45,7 @@ public final class DomainConfigLoader {
         if (filesDir != null && !filesDir.exists()) {
             filesDir.mkdirs();
         }
-        File target = new File(filesDir, AppEnvironment.DOMAIN_CONFIG_NAME);
+        File target = new File(filesDir, FileUtils.DOMAIN_CONFIG_NAME);
         if (target.exists() && target.length() > 0) {
             if (!loadRules(target).isEmpty()) {
                 Log.i(TAG, "Keeping existing domain.cfg: " + target.getAbsolutePath());
@@ -40,7 +57,7 @@ public final class DomainConfigLoader {
     }
 
     public static List<DomainRule> loadActiveRules() {
-        File cfg = AppEnvironment.resolveConfigFile(AppEnvironment.DOMAIN_CONFIG_NAME);
+        File cfg = FileUtils.resolveFilePath(FileUtils.DOMAIN_CONFIG_NAME);
         if (cfg == null) {
             return Collections.emptyList();
         }
@@ -91,7 +108,7 @@ public final class DomainConfigLoader {
     }
 
     private static void extractAssetConfig(Context context, File target) {
-        try (InputStream in = context.getAssets().open(AppEnvironment.DOMAIN_CONFIG_NAME);
+        try (InputStream in = context.getAssets().open(FileUtils.DOMAIN_CONFIG_NAME);
              OutputStream out = new FileOutputStream(target)) {
             byte[] buffer = new byte[4096];
             int read;

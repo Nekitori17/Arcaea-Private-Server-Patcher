@@ -62,6 +62,12 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void * /*reserved*/) {
 }
 
 JNIEXPORT void JNICALL
+Java_moe_ext_arc_ExtEntry_nativeInit(JNIEnv * /*env*/,
+                                     jclass /*clazz*/) {
+  Ext::init_hook_subsystem();
+}
+
+JNIEXPORT void JNICALL
 Java_moe_ext_arc_core_NativeBridge_nativeInit(JNIEnv * /*env*/,
                                               jclass /*clazz*/) {
   Ext::init_hook_subsystem();

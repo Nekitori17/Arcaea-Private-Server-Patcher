@@ -13,28 +13,28 @@
 .method private constructor <init>()V
     .locals 0
 
-    .line 13
+    .line 14
     invoke-direct {p0}, Ljava/lang/Object;-><init>()V
 
-    .line 14
+    .line 15
     return-void
 .end method
 
-.method public static findMatch(Ljava/util/List;Ljava/lang/String;I)Lmoe/ext/arc/config/DomainRule;
+.method public static findMatch(Ljava/util/List;Ljava/lang/String;I)Lmoe/ext/arc/config/DomainConfigLoader$DomainRule;
     .locals 6
     .annotation system Ldalvik/annotation/Signature;
         value = {
             "(",
             "Ljava/util/List<",
-            "Lmoe/ext/arc/config/DomainRule;",
+            "Lmoe/ext/arc/config/DomainConfigLoader$DomainRule;",
             ">;",
             "Ljava/lang/String;",
             "I)",
-            "Lmoe/ext/arc/config/DomainRule;"
+            "Lmoe/ext/arc/config/DomainConfigLoader$DomainRule;"
         }
     .end annotation
 
-    .line 17
+    .line 18
     const/4 v0, 0x0
 
     if-eqz p0, :cond_6d
@@ -55,13 +55,13 @@
 
     goto :goto_6d
 
-    .line 21
+    .line 22
     :cond_12
     invoke-interface {p0}, Ljava/util/List;->size()I
 
     move-result v1
 
-    .line 24
+    .line 25
     const/4 v2, 0x0
 
     const/4 v3, 0x0
@@ -69,15 +69,15 @@
     :goto_18
     if-ge v3, v1, :cond_36
 
-    .line 25
+    .line 26
     invoke-interface {p0, v3}, Ljava/util/List;->get(I)Ljava/lang/Object;
 
     move-result-object v4
 
-    check-cast v4, Lmoe/ext/arc/config/DomainRule;
+    check-cast v4, Lmoe/ext/arc/config/DomainConfigLoader$DomainRule;
 
-    .line 26
-    iget-object v5, v4, Lmoe/ext/arc/config/DomainRule;->originalHost:Ljava/lang/String;
+    .line 27
+    iget-object v5, v4, Lmoe/ext/arc/config/DomainConfigLoader$DomainRule;->originalHost:Ljava/lang/String;
 
     invoke-static {v5, p1}, Lmoe/ext/arc/network/UrlAuthorityParser;->hostEquals(Ljava/lang/String;Ljava/lang/String;)Z
 
@@ -85,28 +85,28 @@
 
     if-eqz v5, :cond_33
 
-    .line 27
-    iget v5, v4, Lmoe/ext/arc/config/DomainRule;->originalPort:I
+    .line 28
+    iget v5, v4, Lmoe/ext/arc/config/DomainConfigLoader$DomainRule;->originalPort:I
 
     if-eqz v5, :cond_32
 
     if-eqz p2, :cond_32
 
-    iget v5, v4, Lmoe/ext/arc/config/DomainRule;->originalPort:I
+    iget v5, v4, Lmoe/ext/arc/config/DomainConfigLoader$DomainRule;->originalPort:I
 
     if-ne v5, p2, :cond_33
 
-    .line 28
+    .line 29
     :cond_32
     return-object v4
 
-    .line 24
+    .line 25
     :cond_33
     add-int/lit8 v3, v3, 0x1
 
     goto :goto_18
 
-    .line 34
+    .line 35
     :cond_36
     invoke-static {p1}, Lmoe/ext/arc/config/DomainRuleMatcher;->isLowiroHost(Ljava/lang/String;)Z
 
@@ -114,21 +114,21 @@
 
     if-eqz v3, :cond_51
 
-    .line 35
+    .line 36
     const/4 v3, 0x0
 
     :goto_3d
     if-ge v3, v1, :cond_51
 
-    .line 36
+    .line 37
     invoke-interface {p0, v3}, Ljava/util/List;->get(I)Ljava/lang/Object;
 
     move-result-object v4
 
-    check-cast v4, Lmoe/ext/arc/config/DomainRule;
+    check-cast v4, Lmoe/ext/arc/config/DomainConfigLoader$DomainRule;
 
-    .line 37
-    iget-object v5, v4, Lmoe/ext/arc/config/DomainRule;->originalHost:Ljava/lang/String;
+    .line 38
+    iget-object v5, v4, Lmoe/ext/arc/config/DomainConfigLoader$DomainRule;->originalHost:Ljava/lang/String;
 
     invoke-static {v5}, Lmoe/ext/arc/config/DomainRuleMatcher;->isLowiroHost(Ljava/lang/String;)Z
 
@@ -136,38 +136,38 @@
 
     if-eqz v5, :cond_4e
 
-    .line 38
+    .line 39
     return-object v4
 
-    .line 35
+    .line 36
     :cond_4e
     add-int/lit8 v3, v3, 0x1
 
     goto :goto_3d
 
-    .line 44
+    .line 45
     :cond_51
     if-nez p2, :cond_6c
 
-    .line 45
+    .line 46
     nop
 
     :goto_54
     if-ge v2, v1, :cond_6c
 
-    .line 46
+    .line 47
     invoke-interface {p0, v2}, Ljava/util/List;->get(I)Ljava/lang/Object;
 
     move-result-object p2
 
-    check-cast p2, Lmoe/ext/arc/config/DomainRule;
+    check-cast p2, Lmoe/ext/arc/config/DomainConfigLoader$DomainRule;
 
-    .line 47
-    iget v3, p2, Lmoe/ext/arc/config/DomainRule;->replacementPort:I
+    .line 48
+    iget v3, p2, Lmoe/ext/arc/config/DomainConfigLoader$DomainRule;->replacementPort:I
 
     if-lez v3, :cond_69
 
-    iget-object v3, p2, Lmoe/ext/arc/config/DomainRule;->replacementHost:Ljava/lang/String;
+    iget-object v3, p2, Lmoe/ext/arc/config/DomainConfigLoader$DomainRule;->replacementHost:Ljava/lang/String;
 
     invoke-static {v3, p1}, Lmoe/ext/arc/network/UrlAuthorityParser;->hostEquals(Ljava/lang/String;Ljava/lang/String;)Z
 
@@ -175,20 +175,20 @@
 
     if-eqz v3, :cond_69
 
-    .line 48
+    .line 49
     return-object p2
 
-    .line 45
+    .line 46
     :cond_69
     add-int/lit8 v2, v2, 0x1
 
     goto :goto_54
 
-    .line 53
+    .line 54
     :cond_6c
     return-object v0
 
-    .line 18
+    .line 19
     :cond_6d
     :goto_6d
     return-object v0
@@ -197,12 +197,12 @@
 .method private static isLowiroHost(Ljava/lang/String;)Z
     .locals 1
 
-    .line 57
+    .line 58
     invoke-static {p0}, Lmoe/ext/arc/network/UrlAuthorityParser;->normalizeHost(Ljava/lang/String;)Ljava/lang/String;
 
     move-result-object p0
 
-    .line 58
+    .line 59
     const-string v0, "lowiro.com"
 
     invoke-virtual {p0, v0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z

@@ -1,6 +1,7 @@
 package moe.ext.arc.config;
 
 import java.util.List;
+import moe.ext.arc.config.DomainConfigLoader.DomainRule;
 import moe.ext.arc.network.UrlAuthorityParser;
 
 /**

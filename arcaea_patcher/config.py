@@ -1,10 +1,27 @@
+"""Configuration models, default target domains, and YAML loader."""
+
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 import yaml
 
-from arcaea_patcher.constants import DEFAULT_CONFIG_FILES
 from arcaea_patcher.utils.logger import logger
+
+# Default target domain lists and system constants
+API_DOMAINS: List[str] = [
+    "arcapi-v4.lowiro.com",
+    "arcapi-v3.lowiro.com",
+]
+
+AUTH_DOMAINS: List[str] = [
+    "auth-v2.lowiro.com",
+    "auth.lowiro.com",
+    "arcaea.lowiro.com",
+]
+
+DEFAULT_CONFIG_FILES = ("config.yml", "config.yaml")
 
 
 @dataclass

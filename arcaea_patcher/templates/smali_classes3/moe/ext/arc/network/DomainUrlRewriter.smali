@@ -12,7 +12,7 @@
     .annotation system Ldalvik/annotation/Signature;
         value = {
             "Ljava/util/List<",
-            "Lmoe/ext/arc/config/DomainRule;",
+            "Lmoe/ext/arc/config/DomainConfigLoader$DomainRule;",
             ">;"
         }
     .end annotation
@@ -259,7 +259,7 @@
 
     .line 64
     :cond_6d
-    invoke-static {v2, v4, v5}, Lmoe/ext/arc/config/DomainRuleMatcher;->findMatch(Ljava/util/List;Ljava/lang/String;I)Lmoe/ext/arc/config/DomainRule;
+    invoke-static {v2, v4, v5}, Lmoe/ext/arc/config/DomainRuleMatcher;->findMatch(Ljava/util/List;Ljava/lang/String;I)Lmoe/ext/arc/config/DomainConfigLoader$DomainRule;
 
     move-result-object v2
 
@@ -271,14 +271,14 @@
 
     .line 69
     :cond_74
-    iget-object v6, v2, Lmoe/ext/arc/config/DomainRule;->replacementHost:Ljava/lang/String;
+    iget-object v6, v2, Lmoe/ext/arc/config/DomainConfigLoader$DomainRule;->replacementHost:Ljava/lang/String;
 
     .line 70
-    iget v7, v2, Lmoe/ext/arc/config/DomainRule;->replacementPort:I
+    iget v7, v2, Lmoe/ext/arc/config/DomainConfigLoader$DomainRule;->replacementPort:I
 
     if-lez v7, :cond_7d
 
-    iget v2, v2, Lmoe/ext/arc/config/DomainRule;->replacementPort:I
+    iget v2, v2, Lmoe/ext/arc/config/DomainConfigLoader$DomainRule;->replacementPort:I
 
     goto :goto_7e
 
