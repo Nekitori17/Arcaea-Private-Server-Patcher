@@ -20,6 +20,7 @@ target_include_directories(ext PRIVATE
   "${CMAKE_CURRENT_SOURCE_DIR}/src/core"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/config"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/hooks"
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/patterns"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/utils"
 )
 

@@ -1,16 +1,14 @@
-
 #include "NetworkRedirectHook.h"
 
-#include <cctype>
-#include <cstddef>
+#include <cstdarg>
 #include <cstdio>
-#include <cstdlib>
 #include <cstring>
-#include <netdb.h>
-#include <sys/socket.h>
 
+#include "CurlPattern.h"
 #include "DomainRuleTable.h"
+#include "InlineHook.h"
 #include "NetStringUtils.h"
+#include "PatternScan.h"
 
 #define LOG_MODULE_TAG "NetRedirect"
 #include "Logger.h"
@@ -19,231 +17,131 @@ namespace Ext::Hooks {
 
 namespace {
 
-int (*orig_getaddrinfo)(const char *, const char *, const struct addrinfo *,
-                        struct addrinfo **) = nullptr;
-struct hostent *(*orig_gethostbyname)(const char *) = nullptr;
-struct hostent *(*orig_gethostbyname2)(const char *, int) = nullptr;
-long (*orig_SSL_ctrl)(void *, int, long, void *) = nullptr;
-int (*orig_SSL_write)(void *, const void *, int) = nullptr;
-int (*orig_SSL_read)(void *, void *, int) = nullptr;
-
-constexpr int kSslCtrlSetTlsextHostname = 55;
-
-int hook_getaddrinfo(const char *node, const char *service,
-                     const struct addrinfo *hints, struct addrinfo **res) {
-  if (!orig_getaddrinfo)
-    return EAI_FAIL;
-  if (!node)
-    return orig_getaddrinfo(node, service, hints, res);
-
-  const Ext::Config::DomainRule *rule = Ext::Config::find_matching_rule(node);
-  if (!rule)
-    return orig_getaddrinfo(node, service, hints, res);
-
-  char port_buf[16];
-  const char *target_service = service;
-  if (rule->repl_port != 0) {
-    snprintf(port_buf, sizeof(port_buf), "%d", rule->repl_port);
-    target_service = port_buf;
-  }
-
-  LOGI("getaddrinfo: %s:%s -> %s:%s", node,
-       (service && service[0]) ? service : "-", rule->replacement,
-       (target_service && target_service[0]) ? target_service : "-");
-
-  return orig_getaddrinfo(rule->replacement, target_service, hints, res);
-}
-
-struct hostent *hook_gethostbyname(const char *name) {
-  if (!orig_gethostbyname)
-    return nullptr;
-  if (!name)
-    return orig_gethostbyname(name);
-
-  const Ext::Config::DomainRule *rule = Ext::Config::find_matching_rule(name);
-  if (!rule)
-    return orig_gethostbyname(name);
-
-  LOGI("gethostbyname: %s -> %s", name, rule->replacement);
-  return orig_gethostbyname(rule->replacement);
-}
-
-struct hostent *hook_gethostbyname2(const char *name, int af) {
-  if (!orig_gethostbyname2)
-    return nullptr;
-  if (!name)
-    return orig_gethostbyname2(name, af);
-
-  const Ext::Config::DomainRule *rule = Ext::Config::find_matching_rule(name);
-  if (!rule)
-    return orig_gethostbyname2(name, af);
-
-  LOGI("gethostbyname2: %s -> %s", name, rule->replacement);
-  return orig_gethostbyname2(rule->replacement, af);
-}
-
-long hook_SSL_ctrl(void *ssl, int cmd, long larg, void *parg) {
-  if (cmd == kSslCtrlSetTlsextHostname && parg != nullptr) {
-    const char *orig_sni = static_cast<const char *>(parg);
-    const Ext::Config::DomainRule *rule =
-        Ext::Config::find_matching_rule(orig_sni);
-    if (rule) {
-      LOGI("SSL_ctrl SNI: %s -> %s", orig_sni, rule->replacement);
-      parg = const_cast<char *>(rule->replacement);
-    }
-  }
-  if (!orig_SSL_ctrl)
-    return 0;
-  return orig_SSL_ctrl(ssl, cmd, larg, parg);
-}
-
-bool is_http_request(const char *data, int len) {
-  if (len < 10)
+bool rewrite_url(const char *input_url, char *out_url, size_t out_sz) {
+  if (!input_url || !out_url || out_sz == 0)
     return false;
-  return (memcmp(data, "GET ", 4) == 0 || memcmp(data, "POST ", 5) == 0 ||
-          memcmp(data, "PUT ", 4) == 0 || memcmp(data, "DELETE ", 7) == 0 ||
-          memcmp(data, "HEAD ", 5) == 0 || memcmp(data, "PATCH ", 6) == 0 ||
-          memcmp(data, "OPTIONS ", 8) == 0);
-}
 
-char *rewrite_http_host(const char *data, int len, int *out_len) {
-  *out_len = len;
-  const char *found_pos = nullptr;
-  for (int i = 0; i + 6 < len; i++) {
-    if (data[i] == '\n' && (data[i + 1] == 'H' || data[i + 1] == 'h') &&
-        (data[i + 2] == 'o' || data[i + 2] == 'O') &&
-        (data[i + 3] == 's' || data[i + 3] == 'S') &&
-        (data[i + 4] == 't' || data[i + 4] == 'T') && data[i + 5] == ':') {
-      found_pos = data + i + 1;
-      break;
-    }
-  }
-  if (!found_pos)
-    return nullptr;
-
-  const char *val_start = found_pos + 5;
-  while (*val_start == ' ' || *val_start == '\t')
-    val_start++;
-
-  const char *val_end = val_start;
-  while (val_end < (data + len) && *val_end != '\r' && *val_end != '\n')
-    val_end++;
-
-  const char *port_colon = nullptr;
-  for (const char *c = val_start; c < val_end; c++) {
-    if (*c == ':') {
-      port_colon = c;
-      break;
-    }
+  const char *scheme_end = strstr(input_url, "://");
+  if (!scheme_end) {
+    strncpy(out_url, input_url, out_sz - 1);
+    out_url[out_sz - 1] = '\0';
+    return false;
   }
 
-  size_t host_len = port_colon ? (port_colon - val_start) : (val_end - val_start);
-  char host_buf[128];
-  if (host_len >= sizeof(host_buf))
-    return nullptr;
-  memcpy(host_buf, val_start, host_len);
-  host_buf[host_len] = '\0';
+  const char *host_start = scheme_end + 3;
+  const char *path_start = strpbrk(host_start, "/?#");
+  size_t host_port_len = path_start
+                             ? static_cast<size_t>(path_start - host_start)
+                             : strlen(host_start);
 
-  const auto *rule = Ext::Config::find_matching_rule(host_buf);
-  if (!rule)
-    return nullptr;
+  char host_port_buf[256];
+  if (host_port_len >= sizeof(host_port_buf)) {
+    strncpy(out_url, input_url, out_sz - 1);
+    out_url[out_sz - 1] = '\0';
+    return false;
+  }
+  memcpy(host_port_buf, host_start, host_port_len);
+  host_port_buf[host_port_len] = '\0';
 
-  char new_host_val[256];
+  char host[Ext::Config::kMaxHostLength];
+  int orig_port = 0;
+  Ext::Utils::parse_host_port(host_port_buf, host, sizeof(host), &orig_port);
+
+  const auto *rule = Ext::Config::find_matching_rule(host);
+  if (!rule) {
+    strncpy(out_url, input_url, out_sz - 1);
+    out_url[out_sz - 1] = '\0';
+    return false;
+  }
+
+  char new_host_port[256];
   if (rule->repl_port != 0) {
-    snprintf(new_host_val, sizeof(new_host_val), "%s:%d", rule->replacement,
+    snprintf(new_host_port, sizeof(new_host_port), "%s:%d", rule->replacement,
              rule->repl_port);
-  } else if (port_colon) {
-    size_t port_len = val_end - port_colon;
-    char orig_port[16];
-    if (port_len < sizeof(orig_port)) {
-      memcpy(orig_port, port_colon, port_len);
-      orig_port[port_len] = '\0';
-      snprintf(new_host_val, sizeof(new_host_val), "%s%s", rule->replacement, orig_port);
-    } else {
-      snprintf(new_host_val, sizeof(new_host_val), "%s", rule->replacement);
-    }
+  } else if (orig_port != 0) {
+    snprintf(new_host_port, sizeof(new_host_port), "%s:%d", rule->replacement,
+             orig_port);
   } else {
-    snprintf(new_host_val, sizeof(new_host_val), "%s", rule->replacement);
+    snprintf(new_host_port, sizeof(new_host_port), "%s", rule->replacement);
   }
 
-  size_t prefix_len = val_start - data;
-  size_t suffix_len = (data + len) - val_end;
-  size_t new_host_len = strlen(new_host_val);
-  size_t total_len = prefix_len + new_host_len + suffix_len;
-
-  char *out = static_cast<char *>(malloc(total_len + 1));
-  if (!out)
-    return nullptr;
-
-  memcpy(out, data, prefix_len);
-  memcpy(out + prefix_len, new_host_val, new_host_len);
-  memcpy(out + prefix_len + new_host_len, val_end, suffix_len);
-  out[total_len] = '\0';
-
-  *out_len = static_cast<int>(total_len);
-  LOGI("SSL_write Host: %s -> %s", host_buf, new_host_val);
-  return out;
+  size_t scheme_len = static_cast<size_t>(scheme_end - input_url + 3);
+  const char *tail = path_start ? path_start : "";
+  snprintf(out_url, out_sz, "%.*s%s%s", static_cast<int>(scheme_len),
+           input_url, new_host_port, tail);
+  return true;
 }
 
-int hook_SSL_write(void *ssl, const void *buf, int num) {
-  if (!orig_SSL_write)
-    return -1;
-  if (!buf || num <= 0)
-    return orig_SSL_write(ssl, buf, num);
+using curl_easy_setopt_t = int (*)(void *curl, int opt, ...);
+curl_easy_setopt_t orig_curl_easy_setopt = nullptr;
 
-  const char *char_buf = static_cast<const char *>(buf);
-  if (is_http_request(char_buf, num)) {
-    int new_len = num;
-    char *modified = rewrite_http_host(char_buf, num, &new_len);
-    if (modified) {
-      char preview[128];
-      Ext::Utils::format_ascii_preview(modified, new_len, preview, sizeof(preview));
-      LOGI("SSL_write(ssl=%p, len=%d): %s", ssl, new_len, preview);
+int hook_curl_easy_setopt(void *curl, int opt, ...) {
+  va_list args;
+  va_start(args, opt);
 
-      int rc = orig_SSL_write(ssl, modified, new_len);
-      free(modified);
-      return (rc > 0) ? num : rc;
+  switch (opt) {
+    case Ext::Patterns::kCurlOptUrl: {
+      const char *orig_url = va_arg(args, const char *);
+      va_end(args);
+
+      if (!orig_url) {
+        return orig_curl_easy_setopt(curl, opt, orig_url);
+      }
+
+      char rewritten[1024];
+      if (rewrite_url(orig_url, rewritten, sizeof(rewritten))) {
+        LOGI("curl_easy_setopt(CURLOPT_URL): %s -> %s", orig_url, rewritten);
+        return orig_curl_easy_setopt(curl, opt, rewritten);
+      }
+
+      return orig_curl_easy_setopt(curl, opt, orig_url);
+    }
+
+    case Ext::Patterns::kCurlOptPinnedPublicKey: {
+      va_end(args);
+      LOGI("curl_easy_setopt(CURLOPT_PINNEDPUBLICKEY) suppressed");
+      return Ext::Patterns::kCurleOk;
+    }
+
+    case Ext::Patterns::kCurlOptSslVerifyHost: {
+      va_end(args);
+      LOGI("curl_easy_setopt(CURLOPT_SSL_VERIFYHOST) set to 0");
+      return orig_curl_easy_setopt(curl, opt, 0L);
+    }
+
+    case Ext::Patterns::kCurlOptSslVerifyPeer: {
+      va_end(args);
+      LOGI("curl_easy_setopt(CURLOPT_SSL_VERIFYPEER) set to 0");
+      return orig_curl_easy_setopt(curl, opt, 0L);
+    }
+
+    default: {
+      void *arg = va_arg(args, void *);
+      va_end(args);
+      return orig_curl_easy_setopt(curl, opt, arg);
     }
   }
-
-  char preview[128];
-  Ext::Utils::format_ascii_preview(buf, num, preview, sizeof(preview));
-  LOGI("SSL_write(ssl=%p, len=%d): %s", ssl, num, preview);
-  return orig_SSL_write(ssl, buf, num);
 }
 
-int hook_SSL_read(void *ssl, void *buf, int num) {
-  if (!orig_SSL_read)
-    return -1;
-  int rc = orig_SSL_read(ssl, buf, num);
-  if (rc > 0 && buf) {
-    char preview[128];
-    Ext::Utils::format_ascii_preview(buf, rc, preview, sizeof(preview));
-    LOGI("SSL_read(ssl=%p, req=%d, ret=%d): %s", ssl, num, rc, preview);
+void install_network_redirect_hooks(void * /*module_base*/) {
+  LOGI("Installing Network Redirect (URL Rewrite via curl_easy_setopt)...");
+
+  void *setopt_addr = Ext::Utils::scan_module_pattern(
+      "libcocos2dcpp.so", Ext::Patterns::kCurlEasySetoptPattern);
+  if (!setopt_addr) {
+    LOGE("Failed to find curl_easy_setopt via pattern scan in libcocos2dcpp.so");
+    return;
   }
-  return rc;
-}
 
-void install_network_redirect_hooks(void *module_base) {
-  auto &hm = Ext::Core::HookManager::instance();
-  hm.hook_plt_symbol(module_base, "NetworkRedirect", "getaddrinfo",
-                     reinterpret_cast<void *>(hook_getaddrinfo),
-                     reinterpret_cast<void **>(&orig_getaddrinfo), false);
-  hm.hook_plt_symbol(module_base, "NetworkRedirect", "gethostbyname",
-                     reinterpret_cast<void *>(hook_gethostbyname),
-                     reinterpret_cast<void **>(&orig_gethostbyname), true);
-  hm.hook_plt_symbol(module_base, "NetworkRedirect", "gethostbyname2",
-                     reinterpret_cast<void *>(hook_gethostbyname2),
-                     reinterpret_cast<void **>(&orig_gethostbyname2), true);
-  hm.hook_plt_symbol(module_base, "NetworkRedirect", "SSL_ctrl",
-                     reinterpret_cast<void *>(hook_SSL_ctrl),
-                     reinterpret_cast<void **>(&orig_SSL_ctrl), true);
-  hm.hook_plt_symbol(module_base, "NetworkRedirect", "SSL_write",
-                     reinterpret_cast<void *>(hook_SSL_write),
-                     reinterpret_cast<void **>(&orig_SSL_write), true);
-  hm.hook_plt_symbol(module_base, "NetworkRedirect", "SSL_read",
-                     reinterpret_cast<void *>(hook_SSL_read),
-                     reinterpret_cast<void **>(&orig_SSL_read), true);
+  LOGI("Found curl_easy_setopt @ %p", setopt_addr);
+
+  if (Ext::Core::inline_hook(
+          setopt_addr, reinterpret_cast<void *>(hook_curl_easy_setopt),
+          reinterpret_cast<void **>(&orig_curl_easy_setopt))) {
+    LOGI("Successfully installed inline hook on curl_easy_setopt");
+  } else {
+    LOGE("Failed to install inline hook on curl_easy_setopt @ %p", setopt_addr);
+  }
 }
 
 const Ext::Core::HookModule kNetworkRedirectModule = {
