@@ -1,3 +1,4 @@
+
 #include "NetworkRedirectHook.h"
 
 #include <cctype>
@@ -6,7 +7,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <netdb.h>
-#include <string>
 #include <sys/socket.h>
 
 #include "DomainRuleTable.h"
@@ -28,10 +28,6 @@ int (*orig_SSL_write)(void *, const void *, int) = nullptr;
 int (*orig_SSL_read)(void *, void *, int) = nullptr;
 
 constexpr int kSslCtrlSetTlsextHostname = 55;
-
-// ============================================================================
-// 1. DNS Resolution Hook (Domain & Port Redirect)
-// ============================================================================
 
 int hook_getaddrinfo(const char *node, const char *service,
                      const struct addrinfo *hints, struct addrinfo **res) {
@@ -86,10 +82,6 @@ struct hostent *hook_gethostbyname2(const char *name, int af) {
   return orig_gethostbyname2(rule->replacement, af);
 }
 
-// ============================================================================
-// 2. TLS SNI Extension Hook (SSL_set_tlsext_host_name / SSL_ctrl)
-// ============================================================================
-
 long hook_SSL_ctrl(void *ssl, int cmd, long larg, void *parg) {
   if (cmd == kSslCtrlSetTlsextHostname && parg != nullptr) {
     const char *orig_sni = static_cast<const char *>(parg);
@@ -105,10 +97,6 @@ long hook_SSL_ctrl(void *ssl, int cmd, long larg, void *parg) {
   return orig_SSL_ctrl(ssl, cmd, larg, parg);
 }
 
-// ============================================================================
-// 3. HTTP Host Header Rewrite & Traffic Logging (SSL_write & SSL_read)
-// ============================================================================
-
 bool is_http_request(const char *data, int len) {
   if (len < 10)
     return false;
@@ -118,29 +106,27 @@ bool is_http_request(const char *data, int len) {
           memcmp(data, "OPTIONS ", 8) == 0);
 }
 
-std::string rewrite_http_host(const char *data, int len) {
-  std::string payload(data, len);
-  const char *p = payload.c_str();
+char *rewrite_http_host(const char *data, int len, int *out_len) {
+  *out_len = len;
   const char *found_pos = nullptr;
-
-  for (size_t i = 0; i + 6 < payload.size(); i++) {
-    if (p[i] == '\n' && (p[i + 1] == 'H' || p[i + 1] == 'h') &&
-        (p[i + 2] == 'o' || p[i + 2] == 'O') &&
-        (p[i + 3] == 's' || p[i + 3] == 'S') &&
-        (p[i + 4] == 't' || p[i + 4] == 'T') && p[i + 5] == ':') {
-      found_pos = p + i + 1;
+  for (int i = 0; i + 6 < len; i++) {
+    if (data[i] == '\n' && (data[i + 1] == 'H' || data[i + 1] == 'h') &&
+        (data[i + 2] == 'o' || data[i + 2] == 'O') &&
+        (data[i + 3] == 's' || data[i + 3] == 'S') &&
+        (data[i + 4] == 't' || data[i + 4] == 'T') && data[i + 5] == ':') {
+      found_pos = data + i + 1;
       break;
     }
   }
   if (!found_pos)
-    return payload;
+    return nullptr;
 
   const char *val_start = found_pos + 5;
   while (*val_start == ' ' || *val_start == '\t')
     val_start++;
 
   const char *val_end = val_start;
-  while (*val_end && *val_end != '\r' && *val_end != '\n')
+  while (val_end < (data + len) && *val_end != '\r' && *val_end != '\n')
     val_end++;
 
   const char *port_colon = nullptr;
@@ -151,35 +137,52 @@ std::string rewrite_http_host(const char *data, int len) {
     }
   }
 
-  size_t host_len =
-      port_colon ? (port_colon - val_start) : (val_end - val_start);
+  size_t host_len = port_colon ? (port_colon - val_start) : (val_end - val_start);
   char host_buf[128];
   if (host_len >= sizeof(host_buf))
-    return payload;
+    return nullptr;
   memcpy(host_buf, val_start, host_len);
   host_buf[host_len] = '\0';
 
   const auto *rule = Ext::Config::find_matching_rule(host_buf);
   if (!rule)
-    return payload;
+    return nullptr;
 
   char new_host_val[256];
   if (rule->repl_port != 0) {
     snprintf(new_host_val, sizeof(new_host_val), "%s:%d", rule->replacement,
              rule->repl_port);
   } else if (port_colon) {
-    std::string orig_port_str(port_colon, val_end - port_colon);
-    snprintf(new_host_val, sizeof(new_host_val), "%s%s", rule->replacement,
-             orig_port_str.c_str());
+    size_t port_len = val_end - port_colon;
+    char orig_port[16];
+    if (port_len < sizeof(orig_port)) {
+      memcpy(orig_port, port_colon, port_len);
+      orig_port[port_len] = '\0';
+      snprintf(new_host_val, sizeof(new_host_val), "%s%s", rule->replacement, orig_port);
+    } else {
+      snprintf(new_host_val, sizeof(new_host_val), "%s", rule->replacement);
+    }
   } else {
     snprintf(new_host_val, sizeof(new_host_val), "%s", rule->replacement);
   }
 
-  size_t replace_offset = val_start - payload.c_str();
-  size_t replace_len = val_end - val_start;
-  payload.replace(replace_offset, replace_len, new_host_val);
+  size_t prefix_len = val_start - data;
+  size_t suffix_len = (data + len) - val_end;
+  size_t new_host_len = strlen(new_host_val);
+  size_t total_len = prefix_len + new_host_len + suffix_len;
+
+  char *out = static_cast<char *>(malloc(total_len + 1));
+  if (!out)
+    return nullptr;
+
+  memcpy(out, data, prefix_len);
+  memcpy(out + prefix_len, new_host_val, new_host_len);
+  memcpy(out + prefix_len + new_host_len, val_end, suffix_len);
+  out[total_len] = '\0';
+
+  *out_len = static_cast<int>(total_len);
   LOGI("SSL_write Host: %s -> %s", host_buf, new_host_val);
-  return payload;
+  return out;
 }
 
 int hook_SSL_write(void *ssl, const void *buf, int num) {
@@ -190,15 +193,17 @@ int hook_SSL_write(void *ssl, const void *buf, int num) {
 
   const char *char_buf = static_cast<const char *>(buf);
   if (is_http_request(char_buf, num)) {
-    std::string modified = rewrite_http_host(char_buf, num);
-    char preview[128];
-    Ext::Utils::format_ascii_preview(modified.data(), modified.size(), preview,
-                                    sizeof(preview));
-    LOGI("SSL_write(ssl=%p, len=%zu): %s", ssl, modified.size(), preview);
+    int new_len = num;
+    char *modified = rewrite_http_host(char_buf, num, &new_len);
+    if (modified) {
+      char preview[128];
+      Ext::Utils::format_ascii_preview(modified, new_len, preview, sizeof(preview));
+      LOGI("SSL_write(ssl=%p, len=%d): %s", ssl, new_len, preview);
 
-    int rc = orig_SSL_write(ssl, modified.data(),
-                            static_cast<int>(modified.size()));
-    return (rc > 0) ? num : rc;
+      int rc = orig_SSL_write(ssl, modified, new_len);
+      free(modified);
+      return (rc > 0) ? num : rc;
+    }
   }
 
   char preview[128];
@@ -253,4 +258,3 @@ const Ext::Core::HookModule *get_network_redirect_module() {
 }
 
 } // namespace Ext::Hooks
-

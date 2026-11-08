@@ -33,9 +33,17 @@ target_compile_options(ext PRIVATE
   -Wextra
   -Wno-unused-parameter
   -Oz
-  -flto=thin
+  -flto
   -ffunction-sections
   -fdata-sections
+  -fno-unwind-tables
+  -fno-asynchronous-unwind-tables
+  -fno-stack-protector
+  -fomit-frame-pointer
+  -fno-ident
+  -fmerge-all-constants
+  -fno-common
+  -fno-math-errno
   -fvisibility=hidden
   -fvisibility-inlines-hidden
   -fno-exceptions
@@ -49,11 +57,15 @@ set_target_properties(ext PROPERTIES
 )
 
 target_link_options(ext PRIVATE
-  -flto=thin
+  -flto
   -Wl,--gc-sections
   -Wl,--icf=all
+  -Wl,-Bsymbolic-functions
   -Wl,--exclude-libs,ALL
   -Wl,-s
+  -Wl,-x
+  -Wl,-X
+  -Wl,--strip-all
 )
 
 if(ANDROID)
