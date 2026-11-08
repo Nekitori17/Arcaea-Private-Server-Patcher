@@ -19,22 +19,22 @@
 .method private constructor <init>()V
     .locals 0
 
-    .line 40
+    .line 41
     invoke-direct {p0}, Ljava/lang/Object;-><init>()V
 
-    .line 41
+    .line 42
     return-void
 .end method
 
 .method public static ensureConfigExtracted(Landroid/content/Context;)V
     .locals 6
 
-    .line 44
+    .line 45
     invoke-virtual {p0}, Landroid/content/Context;->getFilesDir()Ljava/io/File;
 
     move-result-object v0
 
-    .line 45
+    .line 46
     if-eqz v0, :cond_f
 
     invoke-virtual {v0}, Ljava/io/File;->exists()Z
@@ -43,10 +43,10 @@
 
     if-nez v1, :cond_f
 
-    .line 46
+    .line 47
     invoke-virtual {v0}, Ljava/io/File;->mkdirs()Z
 
-    .line 48
+    .line 49
     :cond_f
     new-instance v1, Ljava/io/File;
 
@@ -54,7 +54,7 @@
 
     invoke-direct {v1, v0, v2}, Ljava/io/File;-><init>(Ljava/io/File;Ljava/lang/String;)V
 
-    .line 49
+    .line 50
     invoke-virtual {v1}, Ljava/io/File;->exists()Z
 
     move-result v0
@@ -71,7 +71,7 @@
 
     if-lez v0, :cond_52
 
-    .line 50
+    .line 51
     invoke-static {v1}, Lmoe/ext/arc/config/DomainConfigLoader;->loadRules(Ljava/io/File;)Ljava/util/List;
 
     move-result-object v0
@@ -84,7 +84,7 @@
 
     if-nez v0, :cond_4d
 
-    .line 51
+    .line 52
     new-instance p0, Ljava/lang/StringBuilder;
 
     invoke-direct {p0}, Ljava/lang/StringBuilder;-><init>()V
@@ -109,27 +109,27 @@
 
     invoke-static {v2, p0}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
 
-    .line 52
+    .line 53
     return-void
 
-    .line 54
+    .line 55
     :cond_4d
     const-string v0, "Existing domain.cfg is malformed; re-extracting from assets"
 
     invoke-static {v2, v0}, Landroid/util/Log;->w(Ljava/lang/String;Ljava/lang/String;)I
 
-    .line 56
+    .line 57
     :cond_52
     invoke-static {p0, v1}, Lmoe/ext/arc/config/DomainConfigLoader;->extractAssetConfig(Landroid/content/Context;Ljava/io/File;)V
 
-    .line 57
+    .line 58
     return-void
 .end method
 
 .method private static extractAssetConfig(Landroid/content/Context;Ljava/io/File;)V
     .locals 5
 
-    .line 111
+    .line 112
     const-string v0, "ArcExt::Config"
 
     :try_start_2
@@ -145,7 +145,7 @@
     :try_end_c
     .catch Ljava/lang/Exception; {:try_start_2 .. :try_end_c} :catch_5d
 
-    .line 112
+    .line 113
     :try_start_c
     new-instance v1, Ljava/io/FileOutputStream;
 
@@ -153,13 +153,13 @@
     :try_end_11
     .catchall {:try_start_c .. :try_end_11} :catchall_51
 
-    .line 113
+    .line 114
     const/16 v2, 0x1000
 
     :try_start_13
     new-array v2, v2, [B
 
-    .line 115
+    .line 116
     :goto_15
     invoke-virtual {p0, v2}, Ljava/io/InputStream;->read([B)I
 
@@ -169,18 +169,18 @@
 
     if-eq v3, v4, :cond_21
 
-    .line 116
+    .line 117
     const/4 v4, 0x0
 
     invoke-virtual {v1, v2, v4, v3}, Ljava/io/OutputStream;->write([BII)V
 
     goto :goto_15
 
-    .line 118
+    .line 119
     :cond_21
     invoke-virtual {v1}, Ljava/io/OutputStream;->flush()V
 
-    .line 119
+    .line 120
     new-instance v2, Ljava/lang/StringBuilder;
 
     invoke-direct {v2}, Ljava/lang/StringBuilder;-><init>()V
@@ -207,7 +207,7 @@
     :try_end_3e
     .catchall {:try_start_13 .. :try_end_3e} :catchall_47
 
-    .line 120
+    .line 121
     :try_start_3e
     invoke-virtual {v1}, Ljava/io/OutputStream;->close()V
     :try_end_41
@@ -220,11 +220,11 @@
     :try_end_46
     .catch Ljava/lang/Exception; {:try_start_43 .. :try_end_46} :catch_5d
 
-    .line 122
+    .line 123
     :cond_46
     goto :goto_78
 
-    .line 111
+    .line 112
     :catchall_47
     move-exception p1
 
@@ -270,11 +270,11 @@
     :try_end_5d
     .catch Ljava/lang/Exception; {:try_start_59 .. :try_end_5d} :catch_5d
 
-    .line 120
+    .line 121
     :catch_5d
     move-exception p0
 
-    .line 121
+    .line 122
     new-instance p1, Ljava/lang/StringBuilder;
 
     invoke-direct {p1}, Ljava/lang/StringBuilder;-><init>()V
@@ -299,7 +299,7 @@
 
     invoke-static {v0, p0}, Landroid/util/Log;->w(Ljava/lang/String;Ljava/lang/String;)I
 
-    .line 123
+    .line 124
     :goto_78
     return-void
 .end method
@@ -315,30 +315,30 @@
         }
     .end annotation
 
-    .line 60
+    .line 61
     const-string v0, "domain.cfg"
 
-    invoke-static {v0}, Lmoe/ext/arc/core/FileUtils;->resolveFilePath(Ljava/lang/String;)Ljava/io/File;
+    invoke-static {v0}, Lmoe/ext/arc/utils/FileUtils;->resolveFilePath(Ljava/lang/String;)Ljava/io/File;
 
     move-result-object v0
 
-    .line 61
+    .line 62
     if-nez v0, :cond_d
 
-    .line 62
+    .line 63
     invoke-static {}, Ljava/util/Collections;->emptyList()Ljava/util/List;
 
     move-result-object v0
 
     return-object v0
 
-    .line 64
+    .line 65
     :cond_d
     invoke-static {v0}, Lmoe/ext/arc/config/DomainConfigLoader;->loadRules(Ljava/io/File;)Ljava/util/List;
 
     move-result-object v1
 
-    .line 65
+    .line 66
     new-instance v2, Ljava/lang/StringBuilder;
 
     invoke-direct {v2}, Ljava/lang/StringBuilder;-><init>()V
@@ -379,7 +379,7 @@
 
     invoke-static {v2, v0}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
 
-    .line 66
+    .line 67
     return-object v1
 .end method
 
@@ -396,7 +396,7 @@
         }
     .end annotation
 
-    .line 70
+    .line 71
     if-eqz p0, :cond_c5
 
     invoke-virtual {p0}, Ljava/io/File;->isFile()Z
@@ -417,18 +417,18 @@
 
     goto/16 :goto_c5
 
-    .line 74
+    .line 75
     :cond_14
     new-instance v0, Ljava/util/ArrayList;
 
     invoke-direct {v0}, Ljava/util/ArrayList;-><init>()V
 
-    .line 75
+    .line 76
     const/4 v1, 0x1
 
     new-array v2, v1, [I
 
-    .line 77
+    .line 78
     :try_start_1c
     new-instance v3, Ljava/io/BufferedReader;
 
@@ -440,7 +440,7 @@
     :try_end_26
     .catch Ljava/lang/Exception; {:try_start_1c .. :try_end_26} :catch_a3
 
-    .line 79
+    .line 80
     :cond_26
     :goto_26
     :try_start_26
@@ -450,7 +450,7 @@
 
     if-eqz p0, :cond_94
 
-    .line 80
+    .line 81
     invoke-static {p0}, Lmoe/ext/arc/network/UrlAuthorityParser;->sanitize(Ljava/lang/String;)Ljava/lang/String;
 
     move-result-object p0
@@ -459,7 +459,7 @@
 
     move-result-object p0
 
-    .line 81
+    .line 82
     invoke-virtual {p0}, Ljava/lang/String;->isEmpty()Z
 
     move-result v4
@@ -474,10 +474,10 @@
 
     if-eqz v4, :cond_43
 
-    .line 82
+    .line 83
     goto :goto_26
 
-    .line 84
+    .line 85
     :cond_43
     const/16 v4, 0x3d
 
@@ -485,7 +485,7 @@
 
     move-result v4
 
-    .line 85
+    .line 86
     if-lez v4, :cond_26
 
     invoke-virtual {p0}, Ljava/lang/String;->length()I
@@ -496,10 +496,10 @@
 
     if-ne v4, v5, :cond_53
 
-    .line 86
+    .line 87
     goto :goto_26
 
-    .line 88
+    .line 89
     :cond_53
     const/4 v5, 0x0
 
@@ -511,7 +511,7 @@
 
     move-result-object v6
 
-    .line 89
+    .line 90
     add-int/lit8 v4, v4, 0x1
 
     invoke-virtual {p0, v4}, Ljava/lang/String;->substring(I)Ljava/lang/String;
@@ -522,7 +522,7 @@
 
     move-result-object p0
 
-    .line 90
+    .line 91
     invoke-virtual {v6}, Ljava/lang/String;->isEmpty()Z
 
     move-result v4
@@ -535,27 +535,27 @@
 
     if-eqz v4, :cond_73
 
-    .line 91
+    .line 92
     goto :goto_26
 
-    .line 93
+    .line 94
     :cond_73
     invoke-static {v6, v2}, Lmoe/ext/arc/network/UrlAuthorityParser;->parseHostPort(Ljava/lang/String;[I)Ljava/lang/String;
 
     move-result-object v4
 
-    .line 94
+    .line 95
     aget v6, v2, v5
 
-    .line 95
+    .line 96
     invoke-static {p0, v2}, Lmoe/ext/arc/network/UrlAuthorityParser;->parseHostPort(Ljava/lang/String;[I)Ljava/lang/String;
 
     move-result-object p0
 
-    .line 96
+    .line 97
     aget v5, v2, v5
 
-    .line 98
+    .line 99
     invoke-virtual {v4}, Ljava/lang/String;->isEmpty()Z
 
     move-result v7
@@ -568,7 +568,7 @@
 
     if-nez v7, :cond_93
 
-    .line 99
+    .line 100
     new-instance v7, Lmoe/ext/arc/config/DomainConfigLoader$DomainRule;
 
     invoke-direct {v7, v4, v6, p0, v5}, Lmoe/ext/arc/config/DomainConfigLoader$DomainRule;-><init>(Ljava/lang/String;ILjava/lang/String;I)V
@@ -577,24 +577,24 @@
     :try_end_93
     .catchall {:try_start_26 .. :try_end_93} :catchall_99
 
-    .line 101
+    .line 102
     :cond_93
     goto :goto_26
 
-    .line 102
+    .line 103
     :cond_94
     :try_start_94
     invoke-virtual {v3}, Ljava/io/BufferedReader;->close()V
     :try_end_97
     .catch Ljava/lang/Exception; {:try_start_94 .. :try_end_97} :catch_a3
 
-    .line 105
+    .line 106
     nop
 
-    .line 107
+    .line 108
     return-object v0
 
-    .line 77
+    .line 78
     :catchall_99
     move-exception p0
 
@@ -616,11 +616,11 @@
     :try_end_a3
     .catch Ljava/lang/Exception; {:try_start_9f .. :try_end_a3} :catch_a3
 
-    .line 102
+    .line 103
     :catch_a3
     move-exception p0
 
-    .line 103
+    .line 104
     new-instance v0, Ljava/lang/StringBuilder;
 
     invoke-direct {v0}, Ljava/lang/StringBuilder;-><init>()V
@@ -647,14 +647,14 @@
 
     invoke-static {v0, p0}, Landroid/util/Log;->w(Ljava/lang/String;Ljava/lang/String;)I
 
-    .line 104
+    .line 105
     invoke-static {}, Ljava/util/Collections;->emptyList()Ljava/util/List;
 
     move-result-object p0
 
     return-object p0
 
-    .line 71
+    .line 72
     :cond_c5
     :goto_c5
     invoke-static {}, Ljava/util/Collections;->emptyList()Ljava/util/List;

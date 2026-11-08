@@ -1,4 +1,4 @@
-package moe.ext.arc.storage;
+package moe.ext.arc;
 
 import android.content.Context;
 import android.content.pm.ApplicationInfo;

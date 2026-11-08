@@ -1,4 +1,4 @@
-.class public final Lmoe/ext/arc/core/FileUtils;
+.class public final Lmoe/ext/arc/utils/FileUtils;
 .super Ljava/lang/Object;
 .source "FileUtils.java"
 
@@ -22,7 +22,7 @@
 
     move-result-object v0
 
-    sput-object v0, Lmoe/ext/arc/core/FileUtils;->FALLBACK_PACKAGES:[Ljava/lang/String;
+    sput-object v0, Lmoe/ext/arc/utils/FileUtils;->FALLBACK_PACKAGES:[Ljava/lang/String;
 
     return-void
 .end method
@@ -69,14 +69,14 @@
     const/4 v2, 0x0
 
     :goto_16
-    sget-object v3, Lmoe/ext/arc/core/FileUtils;->FALLBACK_PACKAGES:[Ljava/lang/String;
+    sget-object v3, Lmoe/ext/arc/utils/FileUtils;->FALLBACK_PACKAGES:[Ljava/lang/String;
 
     array-length v3, v3
 
     if-ge v2, v3, :cond_2b
 
     .line 29
-    sget-object v3, Lmoe/ext/arc/core/FileUtils;->FALLBACK_PACKAGES:[Ljava/lang/String;
+    sget-object v3, Lmoe/ext/arc/utils/FileUtils;->FALLBACK_PACKAGES:[Ljava/lang/String;
 
     aget-object v3, v3, v2
 

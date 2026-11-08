@@ -1,4 +1,4 @@
-.class public Lmoe/ext/arc/storage/InternalStorageProvider;
+.class public Lmoe/ext/arc/InternalStorageProvider;
 .super Landroid/provider/DocumentsProvider;
 .source "InternalStorageProvider.java"
 
@@ -36,7 +36,7 @@
 
     move-result-object v0
 
-    sput-object v0, Lmoe/ext/arc/storage/InternalStorageProvider;->DEFAULT_ROOT_PROJECTION:[Ljava/lang/String;
+    sput-object v0, Lmoe/ext/arc/InternalStorageProvider;->DEFAULT_ROOT_PROJECTION:[Ljava/lang/String;
 
     .line 36
     const-string v5, "flags"
@@ -55,7 +55,7 @@
 
     move-result-object v0
 
-    sput-object v0, Lmoe/ext/arc/storage/InternalStorageProvider;->DEFAULT_DOCUMENT_PROJECTION:[Ljava/lang/String;
+    sput-object v0, Lmoe/ext/arc/InternalStorageProvider;->DEFAULT_DOCUMENT_PROJECTION:[Ljava/lang/String;
 
     return-void
 .end method
@@ -81,7 +81,7 @@
     if-nez p2, :cond_7
 
     .line 257
-    invoke-static {p0, p3}, Lmoe/ext/arc/storage/InternalStorageProvider;->toDocumentId(Landroid/content/Context;Ljava/io/File;)Ljava/lang/String;
+    invoke-static {p0, p3}, Lmoe/ext/arc/InternalStorageProvider;->toDocumentId(Landroid/content/Context;Ljava/io/File;)Ljava/lang/String;
 
     move-result-object p2
 
@@ -89,7 +89,7 @@
 
     .line 259
     :cond_7
-    invoke-static {p0, p2}, Lmoe/ext/arc/storage/InternalStorageProvider;->resolveSafeFile(Landroid/content/Context;Ljava/lang/String;)Ljava/io/File;
+    invoke-static {p0, p2}, Lmoe/ext/arc/InternalStorageProvider;->resolveSafeFile(Landroid/content/Context;Ljava/lang/String;)Ljava/io/File;
 
     move-result-object p3
 
@@ -146,7 +146,7 @@
     .line 272
     const-string p2, "mime_type"
 
-    invoke-static {p3}, Lmoe/ext/arc/storage/InternalStorageProvider;->resolveMimeType(Ljava/io/File;)Ljava/lang/String;
+    invoke-static {p3}, Lmoe/ext/arc/InternalStorageProvider;->resolveMimeType(Ljava/io/File;)Ljava/lang/String;
 
     move-result-object v0
 
@@ -328,7 +328,7 @@
     if-nez v0, :cond_c6
 
     .line 305
-    invoke-static {p3}, Lmoe/ext/arc/storage/InternalStorageProvider;->sanitizeDisplayName(Ljava/lang/String;)Ljava/lang/String;
+    invoke-static {p3}, Lmoe/ext/arc/InternalStorageProvider;->sanitizeDisplayName(Ljava/lang/String;)Ljava/lang/String;
 
     move-result-object p3
 
@@ -447,7 +447,7 @@
 
     .line 323
     :cond_6b
-    invoke-static {p0, v0}, Lmoe/ext/arc/storage/InternalStorageProvider;->isPathSafe(Ljava/io/File;Ljava/io/File;)Z
+    invoke-static {p0, v0}, Lmoe/ext/arc/InternalStorageProvider;->isPathSafe(Ljava/io/File;Ljava/io/File;)Z
 
     move-result p0
 
@@ -598,7 +598,7 @@
     .line 345
     aget-object v3, v0, v2
 
-    invoke-static {v3}, Lmoe/ext/arc/storage/InternalStorageProvider;->deleteRecursively(Ljava/io/File;)Z
+    invoke-static {v3}, Lmoe/ext/arc/InternalStorageProvider;->deleteRecursively(Ljava/io/File;)Z
 
     move-result v3
 
@@ -975,7 +975,7 @@
     .end annotation
 
     .line 157
-    invoke-static {p0}, Lmoe/ext/arc/storage/InternalStorageProvider;->getAppRootDir(Landroid/content/Context;)Ljava/io/File;
+    invoke-static {p0}, Lmoe/ext/arc/InternalStorageProvider;->getAppRootDir(Landroid/content/Context;)Ljava/io/File;
 
     move-result-object p0
 
@@ -1017,7 +1017,7 @@
 
     if-eqz v1, :cond_29
 
-    invoke-static {p0, v0}, Lmoe/ext/arc/storage/InternalStorageProvider;->isPathSafe(Ljava/io/File;Ljava/io/File;)Z
+    invoke-static {p0, v0}, Lmoe/ext/arc/InternalStorageProvider;->isPathSafe(Ljava/io/File;Ljava/io/File;)Z
 
     move-result p0
 
@@ -1111,7 +1111,7 @@
 
     .line 180
     :try_start_0
-    invoke-static {p0}, Lmoe/ext/arc/storage/InternalStorageProvider;->getAppRootDir(Landroid/content/Context;)Ljava/io/File;
+    invoke-static {p0}, Lmoe/ext/arc/InternalStorageProvider;->getAppRootDir(Landroid/content/Context;)Ljava/io/File;
 
     move-result-object p0
 
@@ -1218,27 +1218,27 @@
     .end annotation
 
     .line 117
-    invoke-virtual {p0}, Lmoe/ext/arc/storage/InternalStorageProvider;->getContext()Landroid/content/Context;
+    invoke-virtual {p0}, Lmoe/ext/arc/InternalStorageProvider;->getContext()Landroid/content/Context;
 
     move-result-object v0
 
     .line 118
-    invoke-static {v0}, Lmoe/ext/arc/storage/InternalStorageProvider;->getAppRootDir(Landroid/content/Context;)Ljava/io/File;
+    invoke-static {v0}, Lmoe/ext/arc/InternalStorageProvider;->getAppRootDir(Landroid/content/Context;)Ljava/io/File;
 
     move-result-object v1
 
     .line 119
-    invoke-static {v0, p1}, Lmoe/ext/arc/storage/InternalStorageProvider;->resolveSafeFile(Landroid/content/Context;Ljava/lang/String;)Ljava/io/File;
+    invoke-static {v0, p1}, Lmoe/ext/arc/InternalStorageProvider;->resolveSafeFile(Landroid/content/Context;Ljava/lang/String;)Ljava/io/File;
 
     move-result-object p1
 
     .line 120
-    invoke-static {v1, p1, p2, p3}, Lmoe/ext/arc/storage/InternalStorageProvider;->createSafeDocument(Ljava/io/File;Ljava/io/File;Ljava/lang/String;Ljava/lang/String;)Ljava/io/File;
+    invoke-static {v1, p1, p2, p3}, Lmoe/ext/arc/InternalStorageProvider;->createSafeDocument(Ljava/io/File;Ljava/io/File;Ljava/lang/String;Ljava/lang/String;)Ljava/io/File;
 
     move-result-object p1
 
     .line 121
-    invoke-static {v0, p1}, Lmoe/ext/arc/storage/InternalStorageProvider;->toDocumentId(Landroid/content/Context;Ljava/io/File;)Ljava/lang/String;
+    invoke-static {v0, p1}, Lmoe/ext/arc/InternalStorageProvider;->toDocumentId(Landroid/content/Context;Ljava/io/File;)Ljava/lang/String;
 
     move-result-object p1
 
@@ -1254,16 +1254,16 @@
     .end annotation
 
     .line 126
-    invoke-virtual {p0}, Lmoe/ext/arc/storage/InternalStorageProvider;->getContext()Landroid/content/Context;
+    invoke-virtual {p0}, Lmoe/ext/arc/InternalStorageProvider;->getContext()Landroid/content/Context;
 
     move-result-object v0
 
-    invoke-static {v0, p1}, Lmoe/ext/arc/storage/InternalStorageProvider;->resolveSafeFile(Landroid/content/Context;Ljava/lang/String;)Ljava/io/File;
+    invoke-static {v0, p1}, Lmoe/ext/arc/InternalStorageProvider;->resolveSafeFile(Landroid/content/Context;Ljava/lang/String;)Ljava/io/File;
 
     move-result-object v0
 
     .line 127
-    invoke-static {v0}, Lmoe/ext/arc/storage/InternalStorageProvider;->deleteRecursively(Ljava/io/File;)Z
+    invoke-static {v0}, Lmoe/ext/arc/InternalStorageProvider;->deleteRecursively(Ljava/io/File;)Z
 
     move-result v0
 
@@ -1308,16 +1308,16 @@
     .end annotation
 
     .line 134
-    invoke-virtual {p0}, Lmoe/ext/arc/storage/InternalStorageProvider;->getContext()Landroid/content/Context;
+    invoke-virtual {p0}, Lmoe/ext/arc/InternalStorageProvider;->getContext()Landroid/content/Context;
 
     move-result-object v0
 
-    invoke-static {v0, p1}, Lmoe/ext/arc/storage/InternalStorageProvider;->resolveSafeFile(Landroid/content/Context;Ljava/lang/String;)Ljava/io/File;
+    invoke-static {v0, p1}, Lmoe/ext/arc/InternalStorageProvider;->resolveSafeFile(Landroid/content/Context;Ljava/lang/String;)Ljava/io/File;
 
     move-result-object p1
 
     .line 135
-    invoke-static {p1}, Lmoe/ext/arc/storage/InternalStorageProvider;->resolveMimeType(Ljava/io/File;)Ljava/lang/String;
+    invoke-static {p1}, Lmoe/ext/arc/InternalStorageProvider;->resolveMimeType(Ljava/io/File;)Ljava/lang/String;
 
     move-result-object p1
 
@@ -1331,17 +1331,17 @@
     const/4 v0, 0x0
 
     :try_start_1
-    invoke-virtual {p0}, Lmoe/ext/arc/storage/InternalStorageProvider;->getContext()Landroid/content/Context;
+    invoke-virtual {p0}, Lmoe/ext/arc/InternalStorageProvider;->getContext()Landroid/content/Context;
 
     move-result-object v1
 
     .line 64
-    invoke-static {v1, p1}, Lmoe/ext/arc/storage/InternalStorageProvider;->resolveSafeFile(Landroid/content/Context;Ljava/lang/String;)Ljava/io/File;
+    invoke-static {v1, p1}, Lmoe/ext/arc/InternalStorageProvider;->resolveSafeFile(Landroid/content/Context;Ljava/lang/String;)Ljava/io/File;
 
     move-result-object p1
 
     .line 65
-    invoke-static {v1, p2}, Lmoe/ext/arc/storage/InternalStorageProvider;->resolveSafeFile(Landroid/content/Context;Ljava/lang/String;)Ljava/io/File;
+    invoke-static {v1, p2}, Lmoe/ext/arc/InternalStorageProvider;->resolveSafeFile(Landroid/content/Context;Ljava/lang/String;)Ljava/io/File;
 
     move-result-object p2
 
@@ -1420,11 +1420,11 @@
     .end annotation
 
     .line 107
-    invoke-virtual {p0}, Lmoe/ext/arc/storage/InternalStorageProvider;->getContext()Landroid/content/Context;
+    invoke-virtual {p0}, Lmoe/ext/arc/InternalStorageProvider;->getContext()Landroid/content/Context;
 
     move-result-object p3
 
-    invoke-static {p3, p1}, Lmoe/ext/arc/storage/InternalStorageProvider;->resolveSafeFile(Landroid/content/Context;Ljava/lang/String;)Ljava/io/File;
+    invoke-static {p3, p1}, Lmoe/ext/arc/InternalStorageProvider;->resolveSafeFile(Landroid/content/Context;Ljava/lang/String;)Ljava/io/File;
 
     move-result-object p3
 
@@ -1436,7 +1436,7 @@
     if-nez v0, :cond_17
 
     .line 111
-    invoke-static {p2}, Lmoe/ext/arc/storage/InternalStorageProvider;->parseOpenMode(Ljava/lang/String;)I
+    invoke-static {p2}, Lmoe/ext/arc/InternalStorageProvider;->parseOpenMode(Ljava/lang/String;)I
 
     move-result p1
 
@@ -1487,7 +1487,7 @@
     goto :goto_5
 
     :cond_3
-    sget-object p2, Lmoe/ext/arc/storage/InternalStorageProvider;->DEFAULT_DOCUMENT_PROJECTION:[Ljava/lang/String;
+    sget-object p2, Lmoe/ext/arc/InternalStorageProvider;->DEFAULT_DOCUMENT_PROJECTION:[Ljava/lang/String;
 
     .line 86
     :goto_5
@@ -1496,17 +1496,17 @@
     invoke-direct {p3, p2}, Landroid/database/MatrixCursor;-><init>([Ljava/lang/String;)V
 
     .line 87
-    invoke-virtual {p0}, Lmoe/ext/arc/storage/InternalStorageProvider;->getContext()Landroid/content/Context;
+    invoke-virtual {p0}, Lmoe/ext/arc/InternalStorageProvider;->getContext()Landroid/content/Context;
 
     move-result-object p2
 
     .line 88
-    invoke-static {p2}, Lmoe/ext/arc/storage/InternalStorageProvider;->getAppRootDir(Landroid/content/Context;)Ljava/io/File;
+    invoke-static {p2}, Lmoe/ext/arc/InternalStorageProvider;->getAppRootDir(Landroid/content/Context;)Ljava/io/File;
 
     move-result-object v0
 
     .line 89
-    invoke-static {p2, p1}, Lmoe/ext/arc/storage/InternalStorageProvider;->resolveSafeFile(Landroid/content/Context;Ljava/lang/String;)Ljava/io/File;
+    invoke-static {p2, p1}, Lmoe/ext/arc/InternalStorageProvider;->resolveSafeFile(Landroid/content/Context;Ljava/lang/String;)Ljava/io/File;
 
     move-result-object p1
 
@@ -1530,7 +1530,7 @@
     aget-object v2, p1, v1
 
     .line 94
-    invoke-static {v0, v2}, Lmoe/ext/arc/storage/InternalStorageProvider;->isPathSafe(Ljava/io/File;Ljava/io/File;)Z
+    invoke-static {v0, v2}, Lmoe/ext/arc/InternalStorageProvider;->isPathSafe(Ljava/io/File;Ljava/io/File;)Z
 
     move-result v3
 
@@ -1570,7 +1570,7 @@
     :cond_45
     const/4 v3, 0x0
 
-    invoke-static {p2, p3, v3, v2}, Lmoe/ext/arc/storage/InternalStorageProvider;->addFileRow(Landroid/content/Context;Landroid/database/MatrixCursor;Ljava/lang/String;Ljava/io/File;)V
+    invoke-static {p2, p3, v3, v2}, Lmoe/ext/arc/InternalStorageProvider;->addFileRow(Landroid/content/Context;Landroid/database/MatrixCursor;Ljava/lang/String;Ljava/io/File;)V
 
     .line 92
     :goto_49
@@ -1597,7 +1597,7 @@
     goto :goto_5
 
     :cond_3
-    sget-object p2, Lmoe/ext/arc/storage/InternalStorageProvider;->DEFAULT_DOCUMENT_PROJECTION:[Ljava/lang/String;
+    sget-object p2, Lmoe/ext/arc/InternalStorageProvider;->DEFAULT_DOCUMENT_PROJECTION:[Ljava/lang/String;
 
     .line 77
     :goto_5
@@ -1606,13 +1606,13 @@
     invoke-direct {v0, p2}, Landroid/database/MatrixCursor;-><init>([Ljava/lang/String;)V
 
     .line 78
-    invoke-virtual {p0}, Lmoe/ext/arc/storage/InternalStorageProvider;->getContext()Landroid/content/Context;
+    invoke-virtual {p0}, Lmoe/ext/arc/InternalStorageProvider;->getContext()Landroid/content/Context;
 
     move-result-object p2
 
     const/4 v1, 0x0
 
-    invoke-static {p2, v0, p1, v1}, Lmoe/ext/arc/storage/InternalStorageProvider;->addFileRow(Landroid/content/Context;Landroid/database/MatrixCursor;Ljava/lang/String;Ljava/io/File;)V
+    invoke-static {p2, v0, p1, v1}, Lmoe/ext/arc/InternalStorageProvider;->addFileRow(Landroid/content/Context;Landroid/database/MatrixCursor;Ljava/lang/String;Ljava/io/File;)V
 
     .line 79
     return-object v0
@@ -1632,7 +1632,7 @@
     goto :goto_5
 
     :cond_3
-    sget-object p1, Lmoe/ext/arc/storage/InternalStorageProvider;->DEFAULT_ROOT_PROJECTION:[Ljava/lang/String;
+    sget-object p1, Lmoe/ext/arc/InternalStorageProvider;->DEFAULT_ROOT_PROJECTION:[Ljava/lang/String;
 
     .line 53
     :goto_5
@@ -1641,17 +1641,17 @@
     invoke-direct {v0, p1}, Landroid/database/MatrixCursor;-><init>([Ljava/lang/String;)V
 
     .line 54
-    invoke-virtual {p0}, Lmoe/ext/arc/storage/InternalStorageProvider;->getContext()Landroid/content/Context;
+    invoke-virtual {p0}, Lmoe/ext/arc/InternalStorageProvider;->getContext()Landroid/content/Context;
 
     move-result-object p1
 
     .line 55
-    invoke-static {p1}, Lmoe/ext/arc/storage/InternalStorageProvider;->getAppRootDir(Landroid/content/Context;)Ljava/io/File;
+    invoke-static {p1}, Lmoe/ext/arc/InternalStorageProvider;->getAppRootDir(Landroid/content/Context;)Ljava/io/File;
 
     move-result-object v1
 
     .line 56
-    invoke-static {p1, v0, v1}, Lmoe/ext/arc/storage/InternalStorageProvider;->addRootRow(Landroid/content/Context;Landroid/database/MatrixCursor;Ljava/io/File;)V
+    invoke-static {p1, v0, v1}, Lmoe/ext/arc/InternalStorageProvider;->addRootRow(Landroid/content/Context;Landroid/database/MatrixCursor;Ljava/io/File;)V
 
     .line 57
     return-object v0

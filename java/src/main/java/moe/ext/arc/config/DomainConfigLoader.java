@@ -11,8 +11,9 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import moe.ext.arc.core.FileUtils;
+
 import moe.ext.arc.network.UrlAuthorityParser;
+import moe.ext.arc.utils.FileUtils;
 
 /**
  * Extracts, validates, and parses domain.cfg routing rules.

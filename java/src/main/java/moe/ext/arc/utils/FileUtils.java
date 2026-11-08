@@ -1,4 +1,4 @@
-package moe.ext.arc.core;
+package moe.ext.arc.utils;
 
 import java.io.File;
 import java.util.ArrayList;

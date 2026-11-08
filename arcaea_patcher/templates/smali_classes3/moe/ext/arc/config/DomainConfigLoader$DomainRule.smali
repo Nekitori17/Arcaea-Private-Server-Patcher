@@ -28,21 +28,21 @@
 .method public constructor <init>(Ljava/lang/String;ILjava/lang/String;I)V
     .locals 0
 
-    .line 32
+    .line 33
     invoke-direct {p0}, Ljava/lang/Object;-><init>()V
 
-    .line 33
+    .line 34
     iput-object p1, p0, Lmoe/ext/arc/config/DomainConfigLoader$DomainRule;->originalHost:Ljava/lang/String;
 
-    .line 34
+    .line 35
     iput p2, p0, Lmoe/ext/arc/config/DomainConfigLoader$DomainRule;->originalPort:I
 
-    .line 35
+    .line 36
     iput-object p3, p0, Lmoe/ext/arc/config/DomainConfigLoader$DomainRule;->replacementHost:Ljava/lang/String;
 
-    .line 36
+    .line 37
     iput p4, p0, Lmoe/ext/arc/config/DomainConfigLoader$DomainRule;->replacementPort:I
 
-    .line 37
+    .line 38
     return-void
 .end method

@@ -12,7 +12,7 @@ ET.register_namespace("android", ANDROID_NS)
 
 LAUNCHER_CATEGORY = "android.intent.category.LAUNCHER"
 COMPONENT_TAGS = ("activity", "activity-alias", "service", "receiver", "provider")
-SAF_PROVIDER_CLASS = "moe.ext.arc.storage.InternalStorageProvider"
+SAF_PROVIDER_CLASS = "moe.ext.arc.InternalStorageProvider"
 SAF_DOCUMENTS_ACTION = "android.content.action.DOCUMENTS_PROVIDER"
 
 NSC_XML_CONTENT = """<?xml version="1.0" encoding="utf-8"?>
