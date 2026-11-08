@@ -14,7 +14,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+lib/**/*
 lib64/
 parts/
 sdist/
@@ -263,6 +263,8 @@ __marimo__/
 build/
 Build/
 build-*/
+!build-tools/
+build-tools/**/*
 
 # CMake generated files
 CMakeFiles/
@@ -369,11 +371,15 @@ google-services.json
 # Android Profiling
 *.hprof
 
+!**/.gitkeep
+
+dump_tmp
+.ida
+
 config.yml
+
+native/build/
 
 !arcaea_patcher/templates/**/*
 !arcaea_patcher/manifest/**/*
 arcaea_patcher/manifest/**/__pycache__/**/*
-native/build/
-dump_tmp
-.ida
