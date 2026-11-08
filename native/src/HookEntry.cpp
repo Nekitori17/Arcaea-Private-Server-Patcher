@@ -2,12 +2,10 @@
 
 #include <pthread.h>
 
-#include "DnsRedirectHook.h"
 #include "DomainRuleTable.h"
 #include "FileUtils.h"
 #include "HookManager.h"
-#include "SocketConnectHook.h"
-#include "SslTrafficLoggerHook.h"
+#include "NetworkRedirectHook.h"
 #include "SslVerifyBypassHook.h"
 
 #define LOG_MODULE_TAG "HookEntry"
@@ -40,10 +38,8 @@ void perform_init() {
   }
 
   auto &hm = Ext::Core::HookManager::instance();
-  hm.register_module(Ext::Hooks::get_dns_redirect_module());
-  hm.register_module(Ext::Hooks::get_socket_connect_module());
+  hm.register_module(Ext::Hooks::get_network_redirect_module());
   hm.register_module(Ext::Hooks::get_ssl_verify_bypass_module());
-  hm.register_module(Ext::Hooks::get_ssl_traffic_logger_module());
 
   s_init_ok = (hm.start(kTargetLibrary) >= 0);
 }

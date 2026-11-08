@@ -5,7 +5,7 @@ Python CLI that takes an Arcaea APK, disables SSL certificate/pinning checks (na
 ## What it does
 
 - **SSL bypass (static + runtime)** — declarative ELF patch specs (`SymbolPatchSpec` + `PatternPatchSpec`) patch `libcocos2dcpp.so` (ARM32/ARM64, Thumb-aware, idempotent) to neutralize `SSL_CTX_set_verify`, `SSL_set_verify`, `SSL_CTX_set_custom_verify`, `SSL_CTX_set_cert_verify_callback`, `X509_verify_cert`, `SSL_set1_host`, `SSL_get_verify_result`, `X509_check_host`, plus curl's pinned-public-key check; and neutralizes `setVerifySSL` / `verifySSLPins` in `Cocos2dxHttpURLConnection.smali` and `AsyncHttpClient.smali`.
-- **Domain redirection** — writes `assets/domain.cfg` (`original=replacement` rules) and injects `ExtEntry` (`moe.ext.arc.ExtEntry`) + `DomainUrlRewriter` (`moe.ext.arc.network.DomainUrlRewriter`). `ExtEntry` loads `libext.so`, which PLT-hooks `getaddrinfo` / `gethostbyname` / `gethostbyname2` / `connect` inside `libcocos2dcpp.so`. No domain length limit; hostnames, `host:port`, IPv4 and IPv6 are supported.
+- **Domain & SNI redirection** — writes `assets/domain.cfg` (`original=replacement` rules) and injects `ExtEntry` (`moe.ext.arc.ExtEntry`) + `DomainUrlRewriter` (`moe.ext.arc.network.DomainUrlRewriter`). `ExtEntry` loads `libext.so`, which PLT-hooks `getaddrinfo` / `gethostbyname` / `gethostbyname2` (DNS & port routing), `SSL_ctrl` (TLS SNI hostname), and `SSL_write` (HTTP `Host:` header rewriting) inside `libcocos2dcpp.so`. Seamlessly supports SNI-based routing (Tailscale Funnel, reverse proxies), custom ports, IPv4, and IPv6 with zero domain length limits.
 - **Network Security Config** — injected via XML ElementTree so the app trusts system + user CAs and allows cleartext (required for MITM / self-signed private servers).
 - **Optional features** — package rename (install side-by-side with the original app), Storage Access Framework provider (`moe.ext.arc.storage.InternalStorageProvider` — browse `/data/data/<pkg>` from a file manager, no root).
 - **Automated build** — apktool rebuild → `zipalign` → `apksigner`, with automatic tool discovery and direct status logging.
@@ -137,24 +137,23 @@ python scripts/gen_cert.py
 │   ├── CMakeLists.txt
 │   └── src/
 │       ├── Main.cpp / HookEntry.cpp         # JNI lifecycle & hook orchestration
-│       ├── core/                            # ElfPltHook, HookManager (watcher merged)
-│       ├── config/                          # DomainRuleTable (matcher merged)
-│       ├── routing/                         # DnsRouteCache, HostentBuilder
-│       ├── hooks/                           # DnsRedirect, SocketConnect, SslVerifyBypass, SslTrafficLogger
-│       └── utils/                           # FileUtils (app paths merged), MemoryUtils, NetStringUtils, Logger
-├── java/src/main/java/moe/ext/arc/          # Balanced Java sources
-│   ├── ExtEntry.java                        # Bootstrap entry (package name & native bridge merged)
+│       ├── core/                            # ElfPltHook, HookManager
+│       ├── config/                          # DomainRuleTable
+│       ├── hooks/                           # NetworkRedirectHook, SslVerifyBypassHook
+│       └── utils/                           # FileUtils, MemoryUtils, NetStringUtils, Logger
+├── java/src/main/java/moe/ext/arc/          # Java sources
+│   ├── ExtEntry.java                        # Bootstrap entry & native library loader
 │   ├── core/FileUtils.java                  # File path resolver utility
-│   ├── config/                              # DomainConfigLoader (DomainRule merged), DomainRuleMatcher
+│   ├── config/                              # DomainConfigLoader, DomainRuleMatcher
 │   ├── network/                             # UrlAuthorityParser, DomainUrlRewriter
-│   └── storage/InternalStorageProvider.java # Self-contained SAF DocumentsProvider
+│   └── storage/InternalStorageProvider.java # Storage Access Framework DocumentsProvider
 ├── arcaea_patcher/                          # Python APK Patcher
-│   ├── cli.py / config.py                   # CLI & YAML config loader (constants merged)
+│   ├── cli.py / config.py                   # CLI & YAML config loader
 │   ├── manifest.py                          # Unified XML, package & identity editor
 │   ├── resources.py                         # domain.cfg writer & template merger
 │   ├── smali/                               # transformer.py (base) & specs.py (bytecode hooks)
 │   ├── binary/                              # elf.py (parser), patcher.py (engine), specs.py (patch specs)
-│   ├── core/                                # PatchEngine & ApkToolchain (report removed)
+│   ├── core/                                # PatchEngine & ApkToolchain
 │   └── templates/                           # Pre-built libext.so & smali merged into APK
 ├── scripts/
 │   ├── build_templates.py                   # CMake+Ninja & javac+d8+baksmali builder
