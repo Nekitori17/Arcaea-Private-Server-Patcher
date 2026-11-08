@@ -108,13 +108,13 @@ python scripts/build_templates.py
 
 This also generates `native/build/arm64-v8a/compile_commands.json` configured via `.clangd` for full C++17 / Android NDK IntelliSense.
 
-## Optional: server certificate (`scripts/gen_cert.py`)
+## Optional: server certificate (`gen_cert.py`)
 
 Generates `server.pem` + `server.key` (RSA-2048, 10 years) with SANs covering the `lowiro.com` domains, `localhost` and any hosts/IPs listed in `config.yml` — for running your private server behind TLS.
 
 ```bash
 pip install cryptography
-python scripts/gen_cert.py
+python gen_cert.py
 ```
 
 ## Troubleshooting
@@ -157,8 +157,8 @@ python scripts/gen_cert.py
 │   └── templates/                           # Pre-built libext.so & smali merged into APK
 ├── scripts/
 │   ├── build_templates.py                   # CMake+Ninja & javac+d8+baksmali builder
-│   └── gen_cert.py                          # TLS SAN certificate generator
 └── config.example.yml                       # Copy to config.yml
+├── gen_cert.py                          # TLS SAN certificate generator
 ```
 
 ## License
