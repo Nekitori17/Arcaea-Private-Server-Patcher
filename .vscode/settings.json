@@ -4,4 +4,11 @@
     "--header-insertion=never"
   ],
   "cmake.sourceDirectory": "${workspaceFolder}/native",
+  "java.project.sourcePaths": [
+    "java/src/main/java"
+  ],
+  "java.project.referencedLibraries": [
+    "lib/**/*.jar"
+  ],
+  "java.configuration.updateBuildConfiguration": "automatic",
 }

@@ -177,6 +177,15 @@ def find_android_jar(sdk: Path) -> Path:
             cand = plat / "android.jar"
             if cand.is_file():
                 info(f"android.jar : {cand}")
+                local_jar = LOCAL_LIB_DIR / "android.jar"
+                if not local_jar.exists():
+                    try:
+                        if hasattr(os, "link"):
+                            os.link(cand, local_jar)
+                        else:
+                            shutil.copyfile(cand, local_jar)
+                    except Exception:
+                        shutil.copyfile(cand, local_jar)
                 return cand
 
     die("android.jar not found in '<sdk>/platforms'.")
