@@ -4,10 +4,17 @@ Python CLI that takes an Arcaea APK, disables SSL certificate/pinning checks (na
 
 ## What it does
 
-- **SSL bypass (static + runtime)** — declarative ELF patch specs (`SymbolPatchSpec` + `PatternPatchSpec`) patch `libcocos2dcpp.so` (ARM32/ARM64, Thumb-aware, idempotent) to neutralize `SSL_CTX_set_verify`, `SSL_set_verify`, `SSL_CTX_set_custom_verify`, `SSL_CTX_set_cert_verify_callback`, `X509_verify_cert`, `SSL_set1_host`, `SSL_get_verify_result`, `X509_check_host`, plus curl's pinned-public-key check; and neutralizes `setVerifySSL` / `verifySSLPins` in `Cocos2dxHttpURLConnection.smali` and `AsyncHttpClient.smali`.
-- **Domain & SNI redirection** — writes `assets/domain.cfg` (`original=replacement` rules) and injects `ExtEntry` (`moe.ext.arc.ExtEntry`) + `DomainUrlRewriter` (`moe.ext.arc.network.DomainUrlRewriter`). `ExtEntry` loads `libext.so`, which PLT-hooks `getaddrinfo` / `gethostbyname` / `gethostbyname2` (DNS & port routing), `SSL_ctrl` (TLS SNI hostname), and `SSL_write` (HTTP `Host:` header rewriting) inside `libcocos2dcpp.so`. Seamlessly supports SNI-based routing (Tailscale Funnel, reverse proxies), custom ports, IPv4, and IPv6 with zero domain length limits.
+- **SSL bypass (static + runtime)**:
+  - **Static ELF patching** — declarative patch specs (`SymbolPatchSpec`) patch `libcocos2dcpp.so` (ARM32/ARM64, Thumb-aware, idempotent) to neutralize exported symbols: `SSL_CTX_set_verify`, `SSL_set_verify`, `SSL_CTX_set_custom_verify`, `SSL_CTX_set_cert_verify_callback`, `X509_verify_cert`, `SSL_set1_host`, `SSL_get_verify_result`, and `X509_check_host`.
+  - **Runtime detour & PLT hooks (`libext.so`)** — inline detour hook intercepts `curl_easy_setopt` to suppress `CURLOPT_PINNEDPUBLICKEY` (returns `CURLE_OK`) and force `CURLOPT_SSL_VERIFYPEER` / `CURLOPT_SSL_VERIFYHOST` to `0`. Secondary PLT hooks provide runtime defense-in-depth on OpenSSL/BoringSSL verification calls.
+  - **Java Smali hooks** — neutralizes `setVerifySSL` and `verifySSLPins` in `Cocos2dxHttpURLConnection.smali` and `AsyncHttpClient.smali`.
+- **Domain & URL redirection (curl inline detour + Java rewriter)**:
+  - Injects `assets/domain.cfg` (`original=replacement` rules with port support and `.lowiro.com` wildcards) and merges `moe.ext.arc.**` classes + `libext.so`.
+  - **Native inline detour (`curl_easy_setopt`)** — uses multi-architecture runtime pattern scanning (`scan_module_pattern` + `inline_hook` with an executable trampoline) in `libcocos2dcpp.so`. Intercepts `CURLOPT_URL` directly at the curl boundary to rewrite endpoint URLs before dispatch. Features 100% unique 1-hit byte patterns across ARM64 (`LDR X16, #8; BR X16`) and ARM32 (`LDR PC, [PC, #-4]`).
+  - **Java URL rewriter** — `DomainUrlRewriter` rewrites URLs for Java-level network calls (e.g. `Cocos2dxHttpURLConnection`).
+  - Seamlessly supports SNI routing (reverse proxies, Tailscale Funnel), custom ports, IPv4, and IPv6 with zero URL/domain length restrictions.
 - **Network Security Config** — injected via XML ElementTree so the app trusts system + user CAs and allows cleartext (required for MITM / self-signed private servers).
-- **Optional features** — package rename (install side-by-side with the original app), Storage Access Framework provider (`moe.ext.arc.storage.InternalStorageProvider` — browse `/data/data/<pkg>` from a file manager, no root).
+- **Optional features** — package rename (install side-by-side with the original app), Storage Access Framework provider (`moe.ext.arc.InternalStorageProvider` — browse `/data/data/<pkg>` from a file manager, no root).
 - **Automated build** — apktool rebuild → `zipalign` → `apksigner`, with automatic tool discovery and direct status logging.
 
 ## Requirements
@@ -59,15 +66,15 @@ The APK is signed with `debug.keystore` (auto-generated on first run) unless you
 ```yaml
 server:
   api_host: "arc-api.example.com:custom_port"      # replaces arcapi-v4/v3.lowiro.com
-  auth_host: "custom_domain:8080"   # replaces auth-v2/auth/arcaea.lowiro.com
-  custom_mappings:                     # optional extra rules, one per entry
+  auth_host: "custom_domain:8080"                  # replaces auth-v2/auth/arcaea.lowiro.com
+  custom_mappings:                                 # optional extra rules, one per entry
     "some.other.host": "192.168.1.10"
 
-package_name: "moe.ext.arc"           # omit to keep the original package
-app_name: "Arcaea Ext"                # omit to keep the original display name
+package_name: "moe.ext.arc"                        # omit to keep the original package
+app_name: "Arcaea Ext"                             # omit to keep the original display name
 
 features:
-  expose_internal_data: false          # SAF provider for internal storage access
+  expose_internal_data: false                      # SAF provider for internal storage access
 
 signing:
   keystore: "debug.keystore"
@@ -82,21 +89,22 @@ If no `server:` host is set, the tool runs in SSL-bypass-only mode (no redirecti
 
 `python -m arcaea_patcher` executes (`arcaea_patcher/core/engine.py`):
 
-1. Decompile with apktool
-2. Merge pre-built `templates/` (`libext.so` + `moe.ext.arc.**` smali)
-3. Rename package (when configured) — including app-owned custom permissions & authorities
-4. Inject Network Security Config
-5. Inject Storage Access Framework provider (when enabled)
-6. Write `assets/domain.cfg` + inject `ExtEntry.init()` and `DomainUrlRewriter.rewriteUrl()`
-7. Patch `libcocos2dcpp.so` (declarative ELF SSL + curl pin bypass, both ABIs)
-8. Patch Java-level SSL pinning in smali
-9. Rebuild → `zipalign` → `apksigner`
+1. **[1/9]** Decompile with apktool
+2. **[2/9]** Merge pre-built `templates/` (`libext.so` for ARM64/ARM32 + compiled smali)
+3. **[3/9]** Rename package and app label (when configured) — including app-owned permissions & authorities
+4. **[4/9]** Inject Network Security Config (`network_security_config.xml`)
+5. **[5/9]** Inject Storage Access Framework provider (`moe.ext.arc.InternalStorageProvider`, when enabled)
+6. **[6/9]** Write `assets/domain.cfg` + inject `ExtEntry.init()` and `DomainUrlRewriter.rewriteUrl()`
+7. **[7/9]** Patch `libcocos2dcpp.so` (declarative ELF symbol patching for OpenSSL/BoringSSL, both ABIs)
+8. **[8/9]** Patch Java-level SSL pinning in smali (`Cocos2dxHttpURLConnection`, `AsyncHttpClient`)
+9. **[9/9]** Rebuild → `zipalign` → `apksigner`
 
 ## On-device behavior
 
-- `ExtEntry` runs in the launcher Activity's `onCreate`. It copies `assets/domain.cfg` to `/data/user/0/<pkg>/files/domain.cfg` **only when missing or malformed**, then loads `libext.so` and installs the hooks.
+- `ExtEntry` runs in the launcher Activity's `onCreate`. It copies `assets/domain.cfg` to `/data/user/0/<pkg>/files/domain.cfg` **only when missing or malformed**, then loads `libext.so` and triggers native initialization.
+- In `libext.so`, `HookManager` watches for `libcocos2dcpp.so`, scans for `curl_easy_setopt` using architecture-specific byte signatures, and hooks it with an executable trampoline.
 - Edit `files/domain.cfg` on device to change routing without re-patching (needs `expose_internal_data: true` or root). Delete the file to restore the APK's default.
-- Redirect and hook log lines appear in logcat under `ArcExt::*`.
+- Redirect and hook logs appear in logcat under `ArcExt::*` (`ArcExt::Init`, `ArcExt::NetRedirect`, `ArcExt::SslBypass`, `ArcExt::ElfPlt`, `ArcExt::InlineHook`, `ArcExt::PatternScan`, `ArcExt::Config`, `ArcExt::Memory`).
 
 ## Rebuilding the injected artifacts (`scripts/build_templates.py`)
 
@@ -106,7 +114,10 @@ If no `server:` host is set, the tool runs in SSL-bypass-only mode (no redirecti
 python scripts/build_templates.py
 ```
 
-This also generates `native/build/arm64-v8a/compile_commands.json` configured via `.clangd` for full C++17 / Android NDK IntelliSense.
+This compiles:
+- `native/` via CMake + Ninja (Android NDK) for `arm64-v8a` and `armeabi-v7a`.
+- `java/` via `javac` → `d8` → `baksmali` into `smali_classes3/`.
+- Also generates `native/build/arm64-v8a/compile_commands.json` configured via `.clangd` for full C++17 / Android NDK IntelliSense.
 
 ## Optional: server certificate (`gen_cert.py`)
 
@@ -137,31 +148,33 @@ python gen_cert.py
 │   ├── CMakeLists.txt
 │   └── src/
 │       ├── Main.cpp / HookEntry.cpp         # JNI lifecycle & hook orchestration
-│       ├── core/                            # ElfPltHook, HookManager
+│       ├── core/                            # ElfPltHook, HookManager, InlineHook
 │       ├── config/                          # DomainRuleTable
-│       ├── hooks/                           # NetworkRedirectHook, SslVerifyBypassHook
-│       └── utils/                           # FileUtils, MemoryUtils, NetStringUtils, Logger
+│       ├── hooks/                           # NetworkRedirectHook (curl hook & URL rewrite), SslVerifyBypassHook
+│       ├── patterns/                        # CurlPattern, PatternDefine
+│       └── utils/                           # FileUtils, MemoryUtils, NetStringUtils, PatternScan, Logger
 ├── java/src/main/java/moe/ext/arc/          # Java sources
 │   ├── ExtEntry.java                        # Bootstrap entry & native library loader
-│   ├── core/FileUtils.java                  # File path resolver utility
+│   ├── InternalStorageProvider.java         # Storage Access Framework DocumentsProvider
 │   ├── config/                              # DomainConfigLoader, DomainRuleMatcher
 │   ├── network/                             # UrlAuthorityParser, DomainUrlRewriter
-│   └── storage/InternalStorageProvider.java # Storage Access Framework DocumentsProvider
+│   └── utils/FileUtils.java                 # File path resolver utility
 ├── arcaea_patcher/                          # Python APK Patcher
 │   ├── cli.py / config.py                   # CLI & YAML config loader
 │   ├── manifest.py                          # Unified XML, package & identity editor
 │   ├── resources.py                         # domain.cfg writer & template merger
-│   ├── smali/                               # transformer.py (base) & specs.py (bytecode hooks)
 │   ├── binary/                              # elf.py (parser), patcher.py (engine), specs.py (patch specs)
-│   ├── core/                                # PatchEngine & ApkToolchain
-│   └── templates/                           # Pre-built libext.so & smali merged into APK
+│   ├── core/                                # engine.py (PatchEngine) & toolchain.py (ApkToolchain)
+│   ├── smali/                               # transformer.py (base) & specs.py (bytecode hooks)
+│   ├── templates/                           # Pre-built libext.so & smali merged into APK
+│   └── utils/logger.py                      # Logging utilities
 ├── scripts/
-│   ├── build_templates.py                   # CMake+Ninja & javac+d8+baksmali builder
-└── config.example.yml                       # Copy to config.yml
-├── gen_cert.py                          # TLS SAN certificate generator
+│   └── build_templates.py                   # CMake+Ninja & javac+d8+baksmali builder
+├── config.example.yml                       # Copy to config.yml
+├── gen_cert.py                              # TLS SAN certificate generator
+└── README.md
 ```
 
 ## License
 
 [MIT](LICENSE)
-

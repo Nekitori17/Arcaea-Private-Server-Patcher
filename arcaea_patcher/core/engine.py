@@ -112,7 +112,7 @@ class PatchEngine:
                 logger.header("[5/9] Injecting SAF InternalStorageProvider")
                 ok = inject_saf_documents_provider(ctx.decoded_dir)
                 if ok:
-                    logger.success("Injected moe.ext.arc.storage.InternalStorageProvider")
+                    logger.success("Injected moe.ext.arc.InternalStorageProvider")
                 else:
                     logger.warn("Failed to inject SAF DocumentsProvider")
 
