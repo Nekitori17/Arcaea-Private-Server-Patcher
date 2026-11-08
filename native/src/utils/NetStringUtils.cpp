@@ -133,30 +133,6 @@ void parse_host_port(const char *input, char *out_host, size_t host_size,
   out_host[host_size - 1] = '\0';
 }
 
-bool format_sockaddr(const struct sockaddr *addr, socklen_t addrlen,
-                     char *out_buf, size_t out_size) {
-  if (!addr || !out_buf || out_size == 0)
-    return false;
-  out_buf[0] = '\0';
-
-  char ip_str[INET6_ADDRSTRLEN] = {0};
-  if (addr->sa_family == AF_INET &&
-      addrlen >= static_cast<socklen_t>(sizeof(struct sockaddr_in))) {
-    const auto *sin = reinterpret_cast<const struct sockaddr_in *>(addr);
-    inet_ntop(AF_INET, &sin->sin_addr, ip_str, sizeof(ip_str));
-    snprintf(out_buf, out_size, "%s:%d", ip_str, ntohs(sin->sin_port));
-    return true;
-  }
-  if (addr->sa_family == AF_INET6 &&
-      addrlen >= static_cast<socklen_t>(sizeof(struct sockaddr_in6))) {
-    const auto *sin6 = reinterpret_cast<const struct sockaddr_in6 *>(addr);
-    inet_ntop(AF_INET6, &sin6->sin6_addr, ip_str, sizeof(ip_str));
-    snprintf(out_buf, out_size, "[%s]:%d", ip_str, ntohs(sin6->sin6_port));
-    return true;
-  }
-  return false;
-}
-
 void format_ascii_preview(const void *buf, int len, char *out, size_t out_sz) {
   if (!buf || len <= 0 || out_sz == 0) {
     if (out_sz > 0)

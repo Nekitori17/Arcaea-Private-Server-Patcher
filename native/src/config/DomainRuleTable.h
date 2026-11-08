@@ -2,7 +2,6 @@
 
 #include <cstddef>
 #include <cstdio>
-#include <netinet/in.h>
 
 namespace Ext::Config {
 
@@ -15,10 +14,6 @@ struct DomainRule {
   char replacement[kMaxHostLength];
   int orig_port;
   int repl_port;
-  struct in_addr repl_v4;
-  bool has_v4;
-  struct in6_addr repl_v6;
-  bool has_v6;
 };
 
 class DomainRuleTable {

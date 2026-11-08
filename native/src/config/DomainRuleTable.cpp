@@ -1,6 +1,5 @@
 #include "DomainRuleTable.h"
 
-#include <arpa/inet.h>
 #include <cerrno>
 #include <cstring>
 
@@ -76,11 +75,6 @@ int DomainRuleTable::load_stream(FILE *fp) {
 
     strncpy(rule.original, orig_host, sizeof(rule.original) - 1);
     strncpy(rule.replacement, repl_host, sizeof(rule.replacement) - 1);
-
-    if (inet_pton(AF_INET, rule.replacement, &rule.repl_v4) == 1)
-      rule.has_v4 = true;
-    if (inet_pton(AF_INET6, rule.replacement, &rule.repl_v6) == 1)
-      rule.has_v6 = true;
 
     LOGI("Rule[%zu]: %s%s -> %s%s", m_count, rule.original,
          rule.orig_port ? " (port-filtered)" : "", rule.replacement,
