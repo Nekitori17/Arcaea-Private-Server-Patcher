@@ -1,23 +1,32 @@
+#!/usr/bin/env python3
+"""Generate self-signed RSA-2048 X.509 certificate and private key with SANs for private server TLS."""
+
+from __future__ import annotations
+
 import datetime
 import ipaddress
 from pathlib import Path
 from typing import Optional
 
-import yaml
 from cryptography import x509
-from cryptography.x509.oid import NameOID
-from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives import serialization
+from cryptography.x509.oid import NameOID
+import yaml
 
 
-def load_server_ips_from_config(
-    config_path: str = "config.yml",
-) -> list[str]:
-    """Read api_host and auth_host from config.yml, return list of unique IPs/hosts."""
+def _strip_port(host_or_ip: str) -> str:
+    val = host_or_ip.strip()
+    if val.startswith("[") and "]" in val:
+        return val[1:val.index("]")]
+    if val.count(":") == 1:
+        return val.rsplit(":", 1)[0]
+    return val
+
+
+def load_server_hosts_from_config(config_path: str = "config.yml") -> list[str]:
     path = Path(config_path)
-    if not path.exists():
-        print(f"[!] Config file '{config_path}' not found, using defaults.")
+    if not path.is_file():
         return []
 
     with open(path, "r", encoding="utf-8") as f:
@@ -26,9 +35,17 @@ def load_server_ips_from_config(
     server_data = raw_cfg.get("server") or {}
     hosts: list[str] = []
     for key in ("api_host", "auth_host"):
-        host = server_data.get(key)
-        if host and host not in hosts:
-            hosts.append(host)
+        raw = server_data.get(key)
+        if raw:
+            clean = _strip_port(str(raw))
+            if clean and clean not in hosts:
+                hosts.append(clean)
+
+    for _, target in (server_data.get("custom_mappings") or {}).items():
+        if target:
+            clean = _strip_port(str(target))
+            if clean and clean not in hosts:
+                hosts.append(clean)
 
     return hosts
 
@@ -38,31 +55,23 @@ def generate_ssl_certificate(
     key_path: str = "server.key",
     server_ip: Optional[str] = None,
     config_path: str = "config.yml",
-    days_valid: int = 3650,  # 10 years
-):
-    # Read IP from config.yml
-    config_hosts = load_server_ips_from_config(config_path)
-
+    days_valid: int = 3650,
+) -> None:
+    config_hosts = load_server_hosts_from_config(config_path)
     if config_hosts:
         print(f"[*] Loaded hosts from {config_path}: {', '.join(config_hosts)}")
 
-    # Primary IP for Common Name (priority: parameter > config > default)
-    primary_ip = server_ip or (config_hosts[0] if config_hosts else "127.0.0.1")
+    primary_host = server_ip or (config_hosts[0] if config_hosts else "127.0.0.1")
 
     print("[*] Generating 2048-bit RSA Private Key...")
-    private_key = rsa.generate_private_key(
-        public_exponent=65537,
-        key_size=2048,
-    )
+    private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
 
-    # Subject & Issuer information
     subject = issuer = x509.Name([
-        x509.NameAttribute(NameOID.COUNTRY_NAME, "VN"),
-        x509.NameAttribute(NameOID.ORGANIZATION_NAME, "Nekitori17 Arcaea Server"),
-        x509.NameAttribute(NameOID.COMMON_NAME, primary_ip),
+        x509.NameAttribute(NameOID.COUNTRY_NAME, "US"),
+        x509.NameAttribute(NameOID.ORGANIZATION_NAME, "Arcaea Private Server"),
+        x509.NameAttribute(NameOID.COMMON_NAME, primary_host),
     ])
 
-    # Domain and IP list for Subject Alternative Names (SAN)
     domains = [
         "localhost",
         "auth-v2.lowiro.com",
@@ -71,26 +80,22 @@ def generate_ssl_certificate(
         "arcapi-v3.lowiro.com",
         "arcaea.lowiro.com",
     ]
-
-    # Combine IPs: 127.0.0.1 + primary_ip + all hosts from config (remove duplicates)
     ips: list[str] = ["127.0.0.1"]
-    for ip in [primary_ip] + config_hosts:
-        if ip not in ips:
-            ips.append(ip)
 
-    # Build SAN entries — use list[x509.GeneralName] for both DNSName and IPAddress
-    alt_names: list[x509.GeneralName] = []
-    for d in domains:
-        alt_names.append(x509.DNSName(d))
-    for ip_str in ips:
+    for candidate in [primary_host] + config_hosts:
         try:
-            alt_names.append(x509.IPAddress(ipaddress.ip_address(ip_str)))
+            ipaddress.ip_address(candidate)
+            if candidate not in ips:
+                ips.append(candidate)
         except ValueError:
-            pass
+            if candidate not in domains:
+                domains.append(candidate)
+
+    alt_names: list[x509.GeneralName] = [x509.DNSName(d) for d in domains]
+    for ip_str in ips:
+        alt_names.append(x509.IPAddress(ipaddress.ip_address(ip_str)))
 
     now = datetime.datetime.now(datetime.timezone.utc)
-
-    print("[*] Building X.509 Certificate with SAN extensions...")
     cert = (
         x509.CertificateBuilder()
         .subject_name(subject)
@@ -99,36 +104,24 @@ def generate_ssl_certificate(
         .serial_number(x509.random_serial_number())
         .not_valid_before(now - datetime.timedelta(days=1))
         .not_valid_after(now + datetime.timedelta(days=days_valid))
-        .add_extension(
-            x509.SubjectAlternativeName(alt_names),
-            critical=False,
-        )
-        .add_extension(
-            x509.BasicConstraints(ca=True, path_length=None),
-            critical=True,
-        )
+        .add_extension(x509.SubjectAlternativeName(alt_names), critical=False)
+        .add_extension(x509.BasicConstraints(ca=True, path_length=None), critical=True)
         .sign(private_key, hashes.SHA256())
     )
 
-    # 1. Write Private Key (server.key)
-    with open(key_path, "wb") as f:
-        f.write(
-            private_key.private_bytes(
-                encoding=serialization.Encoding.PEM,
-                format=serialization.PrivateFormat.TraditionalOpenSSL,
-                encryption_algorithm=serialization.NoEncryption(),
-            )
+    Path(key_path).write_bytes(
+        private_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.TraditionalOpenSSL,
+            encryption_algorithm=serialization.NoEncryption(),
         )
-    print(f"[+] Saved Private Key to: {Path(key_path).resolve()}")
+    )
+    Path(cert_path).write_bytes(cert.public_bytes(serialization.Encoding.PEM))
 
-    # 2. Write Certificate (server.pem)
-    with open(cert_path, "wb") as f:
-        f.write(cert.public_bytes(serialization.Encoding.PEM))
-    print(f"[+] Saved Certificate to: {Path(cert_path).resolve()}")
-
-    print("\n[✓] Certificate generated successfully!")
-    print(f"    - Valid Domains : {', '.join(domains)}")
-    print(f"    - Valid IPs     : {', '.join(ips)}")
+    print(f"[+] Saved Private Key : {Path(key_path).resolve()}")
+    print(f"[+] Saved Certificate : {Path(cert_path).resolve()}")
+    print(f"    - Valid Domains   : {', '.join(domains)}")
+    print(f"    - Valid IPs       : {', '.join(ips)}")
 
 
 if __name__ == "__main__":
