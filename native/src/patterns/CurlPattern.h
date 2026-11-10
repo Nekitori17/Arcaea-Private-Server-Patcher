@@ -23,7 +23,3 @@ inline constexpr ArchPattern kCurlEasySetoptPattern = {
 };
 
 } // namespace Ext::Patterns
-
-namespace Ext::Offsets {
-using namespace Ext::Patterns;
-} // namespace Ext::Offsets
